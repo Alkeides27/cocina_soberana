@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es-VE" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cocina Soberana{% endblock title %}</title>
+    <meta name="description" content="Planificación de comidas venezolanas ajustada a tu presupuesto real.">
+    <meta name="theme-color" content="#7D6608">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+    
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Output CSS -->
+    <link href="/static/css/output.css" rel="stylesheet">
+    
+    <!-- HTMX -->
+    <script src="/static/js/htmx.min.js" defer></script>
+</head>
+<body class="h-full flex flex-col bg-fondo text-texto font-sans" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    
+    <!-- Navbar Component -->
+    {% include "components/_navbar.html" %}
+    
+    <!-- Main Content Container -->
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl">
+        {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg border {% if message.tags == 'error' %}bg-red-50 border-error text-error{% elif message.tags == 'success' %}bg-green-50 border-exito text-exito{% else %}bg-blue-50 border-acento text-acento{% endif %} flex justify-between items-center shadow-sm">
+                        <span>{{ message }}</span>
+                        <button class="text-sm font-semibold hover:opacity-75 focus:outline-none" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock content %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-6 mt-12 text-center text-xs text-gray-400">
+        <div class="container mx-auto px-4">
+            <p class="font-medium text-gray-500">Cocina Soberana © 2026</p>
+            <p class="mt-1">Nodo de Innovación — Equipo Ingenium Code</p>
+        </div>
+    </footer>
+
+    <!-- Service Worker Registration -->
+    <script src="/static/js/sw-register.js" defer></script>
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>

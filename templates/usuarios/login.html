@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-12">
+    <div class="bg-white p-8 border border-gray-100 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-primario tracking-tight text-center mb-2">Ingresar</h2>
+        <p class="text-sm text-gray-500 text-center mb-6">Planificación alimentaria con soberanía nacional.</p>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-50 border border-error text-error rounded-lg text-xs font-semibold">
+                    {{ form.non_field_errors.0 }}
+                </div>
+            {% endif %}
+            
+            <div class="space-y-1">
+                <label for="id_username" class="block text-sm font-bold text-texto">Nombre de usuario</label>
+                <input type="text" name="username" id="id_username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primario focus:border-transparent outline-none transition" required>
+            </div>
+            
+            <div class="space-y-1">
+                <label for="id_password" class="block text-sm font-bold text-texto">Contraseña</label>
+                <input type="password" name="password" id="id_password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primario focus:border-transparent outline-none transition" required>
+            </div>
+            
+            <button type="submit" class="w-full py-3 bg-primario hover:bg-primario/90 text-white rounded-xl font-bold shadow-lg transition-all duration-200 mt-6 cursor-pointer">
+                Iniciar Sesión
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center text-sm text-gray-500 border-t border-gray-100 pt-4">
+            ¿No tienes una cuenta? 
+            <a href="{% url 'registro' %}" class="font-bold text-primario hover:underline">Regístrate</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

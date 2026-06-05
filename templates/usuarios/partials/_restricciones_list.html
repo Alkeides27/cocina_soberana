@@ -1,0 +1,25 @@
+{% if restricciones %}
+    <div class="space-y-2 mt-4">
+        {% for restriction in restricciones %}
+            <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primario/10 text-primario">
+                        {{ restriction.get_tipo_display }}
+                    </span>
+                    {% if restriction.descripcion %}
+                        <p class="text-xs text-gray-500 mt-1">{{ restriction.descripcion }}</p>
+                    {% endif %}
+                </div>
+                <!-- HTMX delete button -->
+                <button hx-post="{% url 'eliminar_restriccion' restriction.pk %}"
+                        hx-target="#restricciones-container"
+                        hx-confirm="¿Seguro que deseas eliminar esta restricción?"
+                        class="text-xs font-bold text-error hover:text-error/80 hover:underline">
+                    Eliminar
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-sm text-gray-400 mt-4 italic">No tienes restricciones alimentarias registradas.</p>
+{% endif %}

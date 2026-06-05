@@ -1,0 +1,38 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% for receta in page_obj %}
+        <div class="h-full">
+            {% include "catalogo/partials/_receta_item.html" with receta=receta %}
+        </div>
+    {% empty %}
+        <div class="col-span-full py-12 text-center text-gray-400 italic bg-white border border-gray-100 rounded-2xl shadow-sm">
+            No se encontraron recetas que coincidan con los filtros aplicados.
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Paginación reactiva con HTMX -->
+{% if page_obj.has_other_pages %}
+    <div class="flex justify-center items-center space-x-2 mt-8">
+        {% if page_obj.has_previous %}
+            <button hx-get="{% url 'filtrar_recetas_ajax' %}?page={{ page_obj.previous_page_number }}&{{ query_params }}"
+                    hx-target="#recetas-grid-container"
+                    hx-push-url="/catalogo/?page={{ page_obj.previous_page_number }}&{{ query_params }}"
+                    class="px-3.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-texto hover:bg-gray-50 transition cursor-pointer bg-white">
+                Anterior
+            </button>
+        {% endif %}
+        
+        <span class="px-3.5 py-1.5 text-xs text-gray-500 font-semibold bg-gray-50 border border-gray-200 rounded-lg">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <button hx-get="{% url 'filtrar_recetas_ajax' %}?page={{ page_obj.next_page_number }}&{{ query_params }}"
+                    hx-target="#recetas-grid-container"
+                    hx-push-url="/catalogo/?page={{ page_obj.next_page_number }}&{{ query_params }}"
+                    class="px-3.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-texto hover:bg-gray-50 transition cursor-pointer bg-white">
+                Siguiente
+            </button>
+        {% endif %}
+    </div>
+{% endif %}

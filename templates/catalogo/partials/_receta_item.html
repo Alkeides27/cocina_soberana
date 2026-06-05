@@ -1,0 +1,52 @@
+<div class="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col justify-between h-full group">
+    <div class="p-5">
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 bg-gray-50 px-2 py-0.5 rounded uppercase">
+                {{ receta.codigo }}
+            </span>
+            <span class="inline-flex items-center text-xs font-semibold {% if receta.nivel_costo == 'ME' %}text-exito bg-green-50{% else %}text-advertencia bg-orange-50{% endif %} px-2.5 py-0.5 rounded-full">
+                {% if receta.nivel_costo == 'ME' %}Muy Económico{% else %}Económico Moderado{% endif %}
+            </span>
+        </div>
+        
+        <h3 class="text-base font-extrabold text-texto group-hover:text-primario transition duration-150 mb-2 line-clamp-2">
+            {{ receta.nombre }}
+        </h3>
+        
+        <div class="flex items-center text-xs text-gray-400 space-x-3 mb-4">
+            <span class="flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span>{{ receta.calorias_por_porcion }} kcal</span>
+            </span>
+            <span>•</span>
+            <span>{{ receta.porciones_base }} porciones</span>
+        </div>
+        
+        <!-- Dietary Flags -->
+        <div class="flex flex-wrap gap-1.5 mt-2">
+            {% if receta.es_vegetariana %}
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-700">VEG</span>
+            {% endif %}
+            {% if receta.es_vegana %}
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">VGN</span>
+            {% endif %}
+            {% if receta.es_sin_gluten %}
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-700">S/G</span>
+            {% endif %}
+            {% if receta.es_sin_lactosa %}
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">S/L</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="p-5 pt-0 border-t border-gray-50 flex items-center justify-between">
+        <a href="{% url 'detalle_receta' receta.codigo %}" class="text-xs font-bold text-primario hover:underline flex items-center space-x-1 cursor-pointer">
+            <span>Ver Receta</span>
+            <svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </a>
+    </div>
+</div>

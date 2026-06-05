@@ -1,0 +1,16 @@
+{
+  "name": "Cocina Soberana",
+  "short_name": "Cocina",
+  "description": "Planificación de comidas venezolanas ajustada a tu presupuesto real",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FEFCF3",
+  "theme_color": "#7D6608",
+  "orientation": "portrait",
+  "lang": "es-VE",
+  "icons": [
+    {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/static/icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

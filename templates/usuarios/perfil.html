@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+    
+    <!-- Info Card -->
+    <div class="md:col-span-1 bg-white p-6 border border-gray-100 rounded-2xl shadow-md h-fit">
+        <div class="flex flex-col items-center text-center border-b border-gray-100 pb-4 mb-4">
+            <div class="w-16 h-16 rounded-full bg-primario/10 text-primario font-extrabold text-2xl flex items-center justify-center mb-3">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+            <h3 class="text-lg font-extrabold text-texto">{{ user.nombre }}</h3>
+            <p class="text-xs text-gray-400">@{{ user.username }}</p>
+        </div>
+        
+        <div class="space-y-3 text-sm">
+            <div>
+                <span class="block text-gray-400 text-xs font-semibold uppercase">Email</span>
+                <span class="text-texto font-medium">{{ user.email }}</span>
+            </div>
+            <div>
+                <span class="block text-gray-400 text-xs font-semibold uppercase">Tamaño Familiar</span>
+                <span class="text-texto font-bold">{{ user.tamano_familia }} {% if user.tamano_familia == 1 %}persona{% else %}personas{% endif %}</span>
+            </div>
+            <div>
+                <span class="block text-gray-400 text-xs font-semibold uppercase">Presupuesto Semanal</span>
+                <span class="text-primario font-extrabold text-base">{{ user.presupuesto_semanal }} {{ user.moneda }}</span>
+            </div>
+        </div>
+        
+        <a href="{% url 'editar_perfil' %}" class="block w-full text-center py-2.5 mt-6 border border-primario text-primario hover:bg-primario hover:text-white rounded-xl font-bold transition shadow-sm cursor-pointer">
+            Editar Perfil
+        </a>
+    </div>
+    
+    <!-- Restrictions Card -->
+    <div class="md:col-span-2 space-y-6">
+        <!-- List of Restrictions -->
+        <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+            <h3 class="text-lg font-extrabold text-primario mb-1">Restricciones Dietéticas</h3>
+            <p class="text-xs text-gray-400">Configura tus restricciones para filtrar automáticamente las recetas sugeridas en tu catálogo.</p>
+            
+            <div id="restricciones-container">
+                {% include "usuarios/partials/_restricciones_list.html" with restricciones=restricciones %}
+            </div>
+        </div>
+        
+        <!-- Add Restriction Form -->
+        <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+            <h3 class="text-lg font-extrabold text-texto mb-4">Agregar Restricción</h3>
+            
+            <form hx-post="{% url 'agregar_restriccion' %}" 
+                  hx-target="#restricciones-container" 
+                  hx-on::after-request="this.reset()"
+                  class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="tipo_restriccion" class="block text-sm font-bold text-texto">Tipo de Restricción</label>
+                    <select name="tipo" id="tipo_restriccion" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primario focus:border-transparent outline-none transition mt-1 bg-white">
+                        {% for code, label in tipos_restriccion %}
+                            <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="descripcion_restriccion" class="block text-sm font-bold text-texto">Detalle u Observación (opcional)</label>
+                    <input type="text" name="descripcion" id="descripcion_restriccion" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primario focus:border-transparent outline-none transition mt-1" placeholder="Ej. Alergia severa, intolerancia temporal, etc.">
+                </div>
+                
+                <button type="submit" class="w-full py-2.5 bg-primario hover:bg-primario/90 text-white rounded-xl font-bold shadow-md transition cursor-pointer">
+                    Guardar Restricción
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

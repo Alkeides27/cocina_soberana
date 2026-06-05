@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-8">
+    <div class="bg-white p-8 border border-gray-100 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-primario tracking-tight text-center mb-2">Editar Perfil</h2>
+        <p class="text-sm text-gray-500 text-center mb-6">Actualiza tu presupuesto familiar o miembros del grupo.</p>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="space-y-1">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-texto">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-xs text-error font-semibold mt-1">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <div class="flex space-x-3 mt-6">
+                <a href="{% url 'perfil' %}" class="w-1/2 text-center py-3 border border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-50 transition cursor-pointer">
+                    Cancelar
+                </a>
+                <button type="submit" class="w-1/2 py-3 bg-primario hover:bg-primario/90 text-white rounded-xl font-bold shadow-lg transition-all duration-200 cursor-pointer">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

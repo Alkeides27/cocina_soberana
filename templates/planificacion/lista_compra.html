@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Compras - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="my-6 space-y-6">
+    
+    <!-- Botón de Volver -->
+    <div>
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center space-x-1.5 text-xs font-bold text-primario hover:underline">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span>Volver al Dashboard</span>
+        </a>
+    </div>
+
+    <!-- Cabecera de Lista de Compras -->
+    <div class="flex flex-wrap justify-between items-center gap-4 bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+        <div>
+            <h1 class="text-2xl font-extrabold text-texto">Lista de Compras Consolidada</h1>
+            <p class="text-xs text-gray-400 mt-1">Consolida los ingredientes del menú semanal escalados para tu familia.</p>
+        </div>
+        
+        <!-- Conectividad y Sincronización PWA -->
+        <div class="flex items-center space-x-2 text-xs font-semibold bg-gray-50 border border-gray-100 rounded-xl px-4 py-2">
+            <span id="connection-indicator" class="w-3.5 h-3.5 rounded-full bg-exito inline-block shadow-sm"></span>
+            <span id="connection-status-text" class="text-texto">En línea — Sincronizado</span>
+        </div>
+    </div>
+
+    <!-- Lista de Ingredientes Agrupados -->
+    {% if items_por_categoria %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for categoria, items in items_por_categoria.items %}
+                <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-md space-y-4">
+                    <h3 class="text-xs font-black uppercase tracking-wider text-primario border-b border-gray-100 pb-2 mb-2">
+                        {{ categoria }}
+                    </h3>
+                    
+                    <div class="space-y-2.5">
+                        {% for item in items %}
+                            {% include "planificacion/partials/_item_compra.html" with item=item %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Botón para Regenerar Lista -->
+        <div class="text-center pt-4">
+            <form action="{% url 'generar_lista_compra' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-5 py-3 border border-gray-200 text-gray-500 hover:text-primario hover:border-primario hover:bg-primario/5 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer bg-white">
+                    Regenerar Lista de Compras
+                </button>
+            </form>
+        </div>
+    {% else %}
+        <div class="bg-white py-12 px-6 text-center text-gray-400 italic rounded-2xl border border-gray-100 shadow-md">
+            No has generado tu lista de compras aún, o tu menú semanal está vacío.
+            <a href="{% url 'menu_semanal' %}" class="block text-xs font-bold text-primario hover:underline mt-3">
+                Planificar menú e iniciar lista
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Aplicar estado de localStorage offline al arrancar (si existe)
+        const syncItems = JSON.parse(localStorage.getItem('offline_sync_items') || '{}');
+        for (let itemId in syncItems) {
+            const checkbox = document.querySelector(`input[hx-post*="/item/${itemId}/"]`);
+            if (checkbox) {
+                const item = syncItems[itemId];
+                checkbox.checked = (item.estado === 'COMPRADO');
+                const label = checkbox.nextElementSibling;
+                if (label) {
+                    if (checkbox.checked) {
+                        label.classList.add('line-through', 'text-gray-300');
+                        label.classList.remove('text-texto');
+                    } else {
+                        label.classList.remove('line-through', 'text-gray-300');
+                        label.classList.add('text-texto');
+                    }
+                }
+            }
+        }
+        
+        // 2. Escuchar cambios de conectividad
+        updateConnectionStatus();
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        
+        // 3. Escuchar clicks en los checkboxes de compras (interceptar para offline)
+        document.addEventListener('change', function(event) {
+            if (event.target.matches('input[type="checkbox"][hx-post*="/item/"]')) {
+                const checkbox = event.target;
+                // Extraer id del endpoint, ej: /planificacion/lista-compra/item/15/ -> 15
+                const parts = checkbox.getAttribute('hx-post').split('/').filter(Boolean);
+                const itemId = parts[parts.length - 1];
+                const estado = checkbox.checked ? 'COMPRADO' : 'PENDIENTE';
+                const timestamp = new Date().toISOString();
+                
+                // Guardar en local cache para sincronización offline
+                let localSync = JSON.parse(localStorage.getItem('offline_sync_items') || '{}');
+                localSync[itemId] = {
+                    item_id: parseInt(itemId),
+                    estado: estado,
+                    actualizado_at: timestamp
+                };
+                localStorage.setItem('offline_sync_items', JSON.stringify(localSync));
+                
+                // Efecto visual instantáneo
+                const label = checkbox.nextElementSibling;
+                if (label) {
+                    if (checkbox.checked) {
+                        label.classList.add('line-through', 'text-gray-300');
+                        label.classList.remove('text-texto');
+                    } else {
+                        label.classList.remove('line-through', 'text-gray-300');
+                        label.classList.add('text-texto');
+                    }
+                }
+                
+                // Si está en línea, gatillar sync inmediato
+                if (navigator.onLine) {
+                    syncWithServer();
+                }
+            }
+        });
+        
+        // 4. Intentar sincronización inicial al cargar
+        if (navigator.onLine) {
+            syncWithServer();
+        }
+    });
+    
+    function updateConnectionStatus() {
+        const indicator = document.getElementById('connection-indicator');
+        const statusText = document.getElementById('connection-status-text');
+        
+        if (!indicator || !statusText) return;
+        
+        if (navigator.onLine) {
+            indicator.className = 'w-3.5 h-3.5 rounded-full bg-exito inline-block shadow-sm';
+            statusText.textContent = 'En línea — Sincronizado';
+            syncWithServer();
+        } else {
+            indicator.className = 'w-3.5 h-3.5 rounded-full bg-error inline-block shadow-sm';
+            statusText.textContent = 'Modo Offline — Cambios guardados localmente';
+        }
+    }
+    
+    function syncWithServer() {
+        const syncItems = JSON.parse(localStorage.getItem('offline_sync_items') || '{}');
+        const itemsArray = Object.values(syncItems);
+        
+        if (itemsArray.length === 0) return;
+        
+        fetch('/planificacion/lista-compra/sync/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ items: itemsArray })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Sincronización exitosa con el servidor.');
+                // Limpiar local storage
+                localStorage.removeItem('offline_sync_items');
+                
+                // Reconciliar la interfaz con el estado consolidado del servidor
+                data.items.forEach(srvItem => {
+                    const checkbox = document.querySelector(`input[hx-post*="/item/${srvItem.item_id}/"]`);
+                    if (checkbox) {
+                        checkbox.checked = (srvItem.estado === 'COMPRADO');
+                        const label = checkbox.nextElementSibling;
+                        if (label) {
+                            if (checkbox.checked) {
+                                label.classList.add('line-through', 'text-gray-300');
+                                label.classList.remove('text-texto');
+                            } else {
+                                label.classList.remove('line-through', 'text-gray-300');
+                                label.classList.add('text-texto');
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar sincronización:', error);
+        });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock extra_js %}

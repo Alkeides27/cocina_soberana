@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}{{ receta.nombre }} - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="my-6 space-y-6">
+    <!-- Botón de Volver -->
+    <div>
+        <a href="{% url 'lista_recetas' %}" class="inline-flex items-center space-x-1.5 text-xs font-bold text-primario hover:underline">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span>Volver al Catálogo</span>
+        </a>
+    </div>
+    
+    <!-- Cabecera de Receta -->
+    <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <span class="text-xs font-bold tracking-wider text-gray-400 bg-gray-50 px-2.5 py-0.5 rounded uppercase">
+                Código: {{ receta.codigo }}
+            </span>
+            <div class="flex gap-2">
+                {% if receta.es_vegetariana %}
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">Vegetariana</span>
+                {% endif %}
+                {% if receta.es_vegana %}
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800">Vegana</span>
+                {% endif %}
+                {% if receta.es_sin_gluten %}
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-50 text-yellow-700">Sin Gluten</span>
+                {% endif %}
+                {% if receta.es_sin_lactosa %}
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700">Sin Lactosa</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h1 class="text-2xl md:text-3xl font-extrabold text-texto">{{ receta.nombre }}</h1>
+        
+        <div class="flex flex-wrap gap-2 mt-3 text-xs">
+            {% for cat in receta.categorias.all %}
+                <span class="px-2 py-0.5 bg-primario/10 text-primario font-bold rounded-lg">{{ cat.nombre }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Bloque de Presupuesto Estimado -->
+    <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">Costo del Grupo Familiar</h3>
+        
+        {% if user.is_authenticated %}
+            {% if costo_estimado is not None %}
+                <div class="flex items-center space-x-3 p-4 bg-green-50/50 border border-exito/20 rounded-xl">
+                    <span class="w-3 h-3 rounded-full bg-exito animate-pulse"></span>
+                    <p class="text-sm font-semibold text-texto">
+                        Costo estimado para tu familia de <span class="font-extrabold text-primario">{{ user.tamano_familia }}</span> comensales:
+                        <span class="block text-xl font-extrabold text-exito mt-1">{{ costo_estimado }} {{ user.moneda }}</span>
+                    </p>
+                </div>
+            {% else %}
+                <div class="flex items-center space-x-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <span class="w-3 h-3 rounded-full bg-gray-400"></span>
+                    <p class="text-sm font-semibold text-gray-600">
+                        Costo estimado para tu familia de <span class="font-extrabold text-primario">{{ user.tamano_familia }}</span> comensales:
+                        <span class="block font-bold text-gray-500 mt-1 italic">No disponible (curaduría de cantidades de ingredientes en desarrollo)</span>
+                    </p>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="p-4 bg-yellow-50/50 border border-advertencia/20 rounded-xl text-center">
+                <p class="text-xs font-semibold text-gray-600">
+                    <a href="{% url 'login' %}" class="text-primario font-bold hover:underline">Inicia Sesión</a> o 
+                    <a href="{% url 'registro' %}" class="text-primario font-bold hover:underline">Regístrate</a> 
+                    para calcular el costo adaptado a los miembros de tu familia.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Ficha Nutricional y Nutrientes -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Info Nutricional -->
+        <div class="md:col-span-1 bg-white p-6 border border-gray-100 rounded-2xl shadow-md space-y-4">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Aporte por Porción</h3>
+            <div class="flex items-baseline space-x-1">
+                <span class="text-3xl font-extrabold text-primario">{{ receta.calorias_por_porcion }}</span>
+                <span class="text-xs font-bold text-gray-400 uppercase">kcal</span>
+            </div>
+            
+            <div class="space-y-2.5 pt-2 border-t border-gray-100 text-xs">
+                <div class="flex justify-between font-semibold">
+                    <span class="text-gray-500">Proteínas</span>
+                    <span class="text-texto">{{ receta.proteinas_g }} g</span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span class="text-gray-500">Carbohidratos</span>
+                    <span class="text-texto">{{ receta.carbohidratos_g }} g</span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span class="text-gray-500">Grasas</span>
+                    <span class="text-texto">{{ receta.grasas_g }} g</span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span class="text-gray-500">Fibra</span>
+                    <span class="text-texto">{{ receta.fibra_g }} g</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ingredientes requeridos -->
+        <div class="md:col-span-2 bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Ingredientes</h3>
+            
+            <ul class="divide-y divide-gray-100 text-xs font-semibold text-texto">
+                {% for ri in ingredientes_receta %}
+                    <li class="py-3 flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-primario"></span>
+                            <span>{{ ri.fk_ingrediente.nombre }}</span>
+                            {% if ri.nota_uso %}
+                                <span class="text-[10px] text-gray-400 font-medium italic">({{ ri.nota_uso }})</span>
+                            {% endif %}
+                        </div>
+                        <span class="text-gray-500">
+                            {% if ri.cantidad is not None %}
+                                {{ ri.cantidad }} {{ ri.fk_ingrediente.unidad_medida }}
+                            {% else %}
+                                <span class="text-gray-300 font-medium italic">Cant. pendiente</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+    </div>
+    
+    <!-- Notas de Preparación -->
+    {% if receta.notes_preparacion or receta.notas_preparacion %}
+        <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">Notas de Preparación</h3>
+            <div class="text-sm text-texto leading-relaxed whitespace-pre-line">
+                {{ receta.notas_preparacion }}
+            </div>
+        </div>
+    {% endif %}
+    
+</div>
+{% endblock content %}

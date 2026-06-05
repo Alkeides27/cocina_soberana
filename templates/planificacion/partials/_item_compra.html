@@ -1,0 +1,20 @@
+<div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow transition" id="item-row-{{ item.id }}">
+    <div class="flex items-center space-x-3">
+        <input type="checkbox" 
+               hx-post="{% url 'cambiar_estado_item' item.pk %}"
+               hx-target="#item-row-{{ item.id }}"
+               hx-swap="outerHTML"
+               class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer"
+               {% if item.estado == 'COMPRADO' %}checked{% endif %}>
+        <span class="text-xs font-bold {% if item.estado == 'COMPRADO' %}line-through text-gray-300{% else %}text-texto{% endif %} transition">
+            {{ item.fk_ingrediente.nombre }}
+        </span>
+    </div>
+    <span class="text-xs font-bold {% if item.estado == 'COMPRADO' %}text-gray-300{% else %}text-gray-500{% endif %}">
+        {% if item.cantidad_total > 0 %}
+            {{ item.cantidad_total }} {{ item.fk_ingrediente.unidad_medida }}
+        {% else %}
+            <span class="text-[10px] font-semibold text-gray-300 italic">Cant. pendiente</span>
+        {% endif %}
+    </span>
+</div>

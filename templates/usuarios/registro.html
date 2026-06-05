@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-8">
+    <div class="bg-white p-8 border border-gray-100 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-primario tracking-tight text-center mb-2">Crear Cuenta</h2>
+        <p class="text-sm text-gray-500 text-center mb-6">Empieza a planificar tus comidas familiares de forma inteligente.</p>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="space-y-1">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-texto">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-xs text-error font-semibold mt-1">{{ field.errors.0 }}</p>
+                    {% endif %}
+                    {% if field.help_text and not field.name == 'password' %}
+                        <p class="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="w-full py-3 bg-primario hover:bg-primario/90 text-white rounded-xl font-bold shadow-lg transition-all duration-200 mt-6 cursor-pointer">
+                Registrarse y Entrar
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center text-sm text-gray-500 border-t border-gray-100 pt-4">
+            ¿Ya tienes una cuenta? 
+            <a href="{% url 'login' %}" class="font-bold text-primario hover:underline">Iniciar Sesión</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

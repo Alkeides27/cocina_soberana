@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Recetas - Cocina Soberana{% endblock title %}
+
+{% block content %}
+<div class="my-6">
+    <div class="text-center md:text-left mb-8">
+        <h1 class="text-3xl font-extrabold text-primario tracking-tight">Catálogo Soberano</h1>
+        <p class="text-sm text-gray-500 mt-1">Explora recetas tradicionales venezolanas nutritivas y económicas.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <!-- Panel de Filtros -->
+        <aside class="md:col-span-1 bg-white p-5 border border-gray-100 rounded-2xl shadow-md h-fit">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Filtros</h3>
+            
+            <form hx-get="{% url 'filtrar_recetas_ajax' %}" 
+                  hx-trigger="change from:input, change from:select"
+                  hx-target="#recetas-grid-container" 
+                  hx-push-url="true"
+                  class="space-y-5">
+                
+                <!-- Categorías -->
+                <div class="space-y-1">
+                    <label for="filtro_categoria" class="block text-xs font-bold text-texto uppercase">Categoría</label>
+                    <select name="categoria" id="filtro_categoria" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+                        <option value="todas">Todas las categorías</option>
+                        {% for cat in categorias %}
+                            <option value="{{ cat.slug }}" {% if filtros_activos.categoria == cat.slug %}selected{% endif %}>{{ cat.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Nivel de Costo -->
+                <div class="space-y-1">
+                    <label for="filtro_costo" class="block text-xs font-bold text-texto uppercase">Costo Estimado</label>
+                    <select name="nivel_costo" id="filtro_costo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+                        <option value="todos">Todos los costos</option>
+                        <option value="ME" {% if filtros_activos.nivel_costo == 'ME' %}selected{% endif %}>Muy Económico</option>
+                        <option value="EM" {% if filtros_activos.nivel_costo == 'EM' %}selected{% endif %}>Económico Moderado</option>
+                    </select>
+                </div>
+                
+                <!-- Banderas Dietéticas -->
+                <div class="space-y-2 border-t border-gray-100 pt-4">
+                    <span class="block text-xs font-bold text-texto uppercase mb-2">Restricciones</span>
+                    
+                    <label class="flex items-center space-x-2 text-xs font-semibold text-gray-600 cursor-pointer">
+                        <input type="checkbox" name="es_vegetariana" class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer" {% if filtros_activos.es_vegetariana %}checked{% endif %}>
+                        <span>Vegetariana</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2 text-xs font-semibold text-gray-600 cursor-pointer">
+                        <input type="checkbox" name="es_vegana" class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer" {% if filtros_activos.es_vegana %}checked{% endif %}>
+                        <span>Vegana</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2 text-xs font-semibold text-gray-600 cursor-pointer">
+                        <input type="checkbox" name="es_sin_gluten" class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer" {% if filtros_activos.es_sin_gluten %}checked{% endif %}>
+                        <span>Sin Gluten</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2 text-xs font-semibold text-gray-600 cursor-pointer">
+                        <input type="checkbox" name="es_sin_lactosa" class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer" {% if filtros_activos.es_sin_lactosa %}checked{% endif %}>
+                        <span>Sin Lactosa</span>
+                    </label>
+                </div>
+            </form>
+        </aside>
+        
+        <!-- Rejilla de Recetas -->
+        <div class="md:col-span-3">
+            <div id="recetas-grid-container" class="transition-opacity duration-200">
+                {% include "catalogo/partials/_receta_list_fragment.html" with page_obj=page_obj query_params=query_params %}
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}
