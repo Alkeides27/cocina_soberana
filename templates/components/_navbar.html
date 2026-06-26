@@ -5,47 +5,66 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <a href="/" class="flex items-center space-x-2">
-                        <span class="w-8 h-8 rounded-lg bg-primario flex items-center justify-center text-white font-bold text-lg shadow-md">C</span>
-                        <span class="font-extrabold text-xl text-primario tracking-tight">Cocina <span class="text-secundario">Soberana</span></span>
+                        <span
+                            class="w-8 h-8 rounded-lg bg-primario flex items-center justify-center text-white font-bold text-lg shadow-md">C</span>
+                        <span class="font-extrabold text-xl text-primario tracking-tight">Cocina <span
+                                class="text-secundario">Soberana</span></span>
                     </a>
                 </div>
                 <!-- Desktop Nav -->
                 <div class="ml-6 flex space-x-2 items-center">
-                    <a href="/catalogo/" class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Catálogo</a>
+                    <a href="/catalogo/"
+                        class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Catálogo</a>
+                    {% if not user.is_authenticated %}
+                    <a href="/#beneficios"
+                        class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Beneficios</a>
+                    <a href="/#pasos"
+                        class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Pasos</a>
+                    <a href="/#testimonios"
+                        class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Testimonios</a>
+                    {% endif %}
                     {% if user.is_authenticated %}
-                        <a href="/planificacion/dashboard/" class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Planificador</a>
-                        <a href="/planificacion/lista-compra/" class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Lista</a>
+                    <a href="/planificacion/dashboard/"
+                        class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Planificador</a>
+                    <a href="/planificacion/lista-compra/"
+                        class="px-3 py-2 rounded-md text-sm font-semibold text-texto hover:text-primario hover:bg-gray-50 transition">Lista</a>
                     {% endif %}
                 </div>
             </div>
-            
+
             <!-- User Section -->
             <div class="flex items-center space-x-2">
                 {% if user.is_authenticated %}
-                    <!-- Budget Balance -->
-                    <div class="hidden md:flex flex-col items-end text-xs mr-2">
-                        <span class="text-gray-400 font-medium uppercase tracking-wider">Presupuesto</span>
-                        <span class="text-primario font-bold">{{ user.presupuesto_semanal }} {{ user.moneda }}</span>
-                    </div>
-                    
-                    <!-- Username / Profile Link -->
-                    <a href="/usuarios/perfil/" class="px-2.5 py-1.5 rounded-lg text-sm font-semibold text-primario hover:bg-primario/5 transition flex items-center space-x-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        <span class="max-w-[80px] truncate">{{ user.username }}</span>
-                    </a>
-                    
-                    <!-- Logout POST form -->
-                    <form action="/usuarios/logout/" method="post" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 hover:text-error hover:border-error hover:bg-red-50 transition">
-                            Salir
-                        </button>
-                    </form>
+                <!-- Budget Balance -->
+                <div class="hidden md:flex flex-col items-end text-xs mr-2">
+                    <span class="text-gray-400 font-medium uppercase tracking-wider">Presupuesto</span>
+                    <span class="text-primario font-bold">{{ user.presupuesto_semanal }} {{ user.moneda }}</span>
+                </div>
+
+                <!-- Username / Profile Link -->
+                <a href="/usuarios/perfil/"
+                    class="px-2.5 py-1.5 rounded-lg text-sm font-semibold text-primario hover:bg-primario/5 transition flex items-center space-x-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    <span class="max-w-[80px] truncate">{{ user.username }}</span>
+                </a>
+
+                <!-- Logout POST form -->
+                <form action="/usuarios/logout/" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 hover:text-error hover:border-error hover:bg-red-50 transition">
+                        Salir
+                    </button>
+                </form>
                 {% else %}
-                    <a href="/usuarios/login/" class="px-3 py-2 text-sm font-semibold text-texto hover:text-primario transition">Entrar</a>
-                    <a href="/usuarios/registro/" class="px-3 py-2 bg-primario hover:bg-primario/90 text-white rounded-lg text-sm font-semibold shadow-sm transition">Registro</a>
+                <a href="/usuarios/login/"
+                    class="px-3 py-2 text-sm font-semibold text-texto hover:text-primario transition">Entrar</a>
+                <a href="/usuarios/registro/"
+                    class="px-3 py-2 bg-primario hover:bg-primario/90 text-white rounded-lg text-sm font-semibold shadow-sm transition">Registro</a>
                 {% endif %}
             </div>
         </div>

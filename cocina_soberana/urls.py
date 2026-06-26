@@ -31,5 +31,5 @@ urlpatterns = [
         template_name='manifest.json',
         content_type='application/manifest+json'
     )),
-    path('', TemplateView.as_view(template_name='base.html'), name='home'),
+    path('', TemplateView.as_view(template_name='home.html'), name='home'),
 ]
