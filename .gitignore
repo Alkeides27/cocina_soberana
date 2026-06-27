@@ -9,3 +9,6 @@ staticfiles/
 .idea/
 .vscode/
 docs
+server.log
+node_modules/
+package-lock.json

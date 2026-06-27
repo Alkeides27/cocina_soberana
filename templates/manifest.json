@@ -4,8 +4,8 @@
   "description": "Planificación de comidas venezolanas ajustada a tu presupuesto real",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FEFCF3",
-  "theme_color": "#7D6608",
+  "background_color": "#FFFDF9",
+  "theme_color": "#8C3A16",
   "orientation": "portrait",
   "lang": "es-VE",
   "icons": [

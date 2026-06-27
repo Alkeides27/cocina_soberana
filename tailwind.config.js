@@ -8,11 +8,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primario: '#7D6608',       // Dorado oliva (tierra venezolana)
-        secundario: '#B7950B',     // Mostaza (papelón)
-        acento: '#5499C7',         // Azul calmo (confianza)
-        fondo: '#FEFCF3',          // Crema cálida
-        texto: '#2C3E50',          // Carbón suave
+        primario: '#8C3A16',       // Terracota / Cacao puro
+        secundario: '#D4A316',     // Oro Maíz / Papelón
+        acento: '#2E6F40',         // Verde Cultivo / Ají dulce
+        fondo: '#FFFDF9',          // Blanco crema
+        texto: '#221A17',          // Café oscuro
         exito: '#27AE60',
         advertencia: '#E67E22',
         error: '#C0392B',
