@@ -136,6 +136,9 @@ def menu_semanal(request):
     # Obtener recetas para dropdowns
     recetas_disponibles = Receta.objects.all().order_by('nombre')
 
+    # Obtener ingredientes para dropdowns
+    ingredientes_disponibles = Ingrediente.objects.all().order_by('nombre')
+
     # Obtener menús de la semana actual
     menus = MenuSemanal.objects.filter(
         fk_usuario=request.user,
@@ -145,6 +148,16 @@ def menu_semanal(request):
     menu_slots = {}
     for m in menus:
         menu_slots[(m.fecha.isoformat(), m.momento)] = m
+
+    # Obtener ingredientes individuales planificados para la semana actual
+    ingredientes_semanales = IngredienteSemanal.objects.filter(
+        fk_usuario=request.user,
+        fecha__range=[start_date, end_date]
+    ).select_related('fk_ingrediente')
+
+    ingrediente_slots = {}
+    for ing_sem in ingredientes_semanales:
+        ingrediente_slots[(ing_sem.fecha.isoformat(), ing_sem.momento, ing_sem.fk_ingrediente.pk)] = ing_sem
 
     # Construir grilla mapeada
     grid = []
@@ -157,16 +170,25 @@ def menu_semanal(request):
         }
         for momento_code, momento_label in MenuSemanal.MOMENTOS:
             menu_entry = menu_slots.get((day['fecha_str'], momento_code))
+            
+            # Obtener todos los ingredientes individuales para este slot
+            ingredientes_en_slot = [
+                ing_sem for (fecha_str, momento, ing_pk), ing_sem in ingrediente_slots.items()
+                if fecha_str == day['fecha_str'] and momento == momento_code
+            ]
+
             row['slots'].append({
                 'momento_code': momento_code,
                 'momento_label': momento_label,
                 'menu_entry': menu_entry,
+                'ingredientes_en_slot': ingredientes_en_slot,
             })
         grid.append(row)
 
     return render(request, 'planificacion/menu_semanal.html', {
         'grid': grid,
         'recetas': recetas_disponibles,
+        'ingredientes': ingredientes_disponibles,
         'momentos': MenuSemanal.MOMENTOS,
     })
 
@@ -284,6 +306,70 @@ def agregar_menu_semanal(request):
 
 @login_required
 @require_POST
+def agregar_ingrediente_semanal_htmx(request):
+    """
+    Endpoint HTMX para agregar un ingrediente individual al menú semanal.
+    """
+    ingrediente_id = request.POST.get('ingrediente_id')
+    fecha_str = request.POST.get('fecha')
+    momento = request.POST.get('momento')
+    cantidad = request.POST.get('cantidad')
+
+    if not all([ingrediente_id, fecha_str, momento, cantidad]):
+        return HttpResponse(
+            '<div class="p-3 bg-red-50 border border-error text-error text-xs font-bold rounded-lg mb-2">Error: Faltan parámetros requeridos.</div>',
+            status=400
+        )
+
+    try:
+        fecha = datetime.date.fromisoformat(fecha_str)
+        ingrediente = get_object_or_404(Ingrediente, pk=ingrediente_id)
+        cantidad_decimal = Decimal(cantidad)
+        if cantidad_decimal <= 0:
+            raise ValueError("La cantidad debe ser mayor que cero.")
+    except (ValueError, Ingrediente.DoesNotExist):
+        return HttpResponse(
+            '<div class="p-3 bg-red-50 border border-error text-error text-xs font-bold rounded-lg mb-2">Error: Ingrediente, fecha o cantidad inválida.</div>',
+            status=400
+        )
+
+    # Validar duplicación del slot para el mismo ingrediente
+    if IngredienteSemanal.objects.filter(fk_usuario=request.user, fk_ingrediente=ingrediente, fecha=fecha, momento=momento).exists():
+        return HttpResponse(
+            '<div class="p-3 bg-red-50 border border-error text-error text-xs font-bold rounded-lg mb-2">Ya tienes este ingrediente planificado en esta fecha y momento.</div>',
+            status=400
+        )
+
+    IngredienteSemanal.objects.create(
+        fk_usuario=request.user,
+        fk_ingrediente=ingrediente,
+        fecha=fecha,
+        momento=momento,
+        cantidad=cantidad_decimal
+    )
+    
+    return HttpResponse(
+        f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{ingrediente.nombre} agregado al menú!</div>'
+    )
+
+
+@login_required
+@require_POST
+def remover_ingrediente_semanal_htmx(request, pk):
+    """
+    Endpoint HTMX para remover un ingrediente individual del menú semanal.
+    """
+    ingrediente_sem = get_object_or_404(IngredienteSemanal, pk=pk, fk_usuario=request.user)
+    nombre_ingrediente = ingrediente_sem.fk_ingrediente.nombre
+    ingrediente_sem.delete()
+
+    return HttpResponse(
+        f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{nombre_ingrediente} eliminado del menú!</div>'
+    )
+
+
+@login_required
+@require_POST
 def remover_menu_semanal(request, pk):
     """
     Endpoint para remover una receta del menú semanal.
@@ -326,9 +412,7 @@ def generar_lista_compra(request):
         # Crear nueva cabecera de lista
         lista = ListaCompra.objects.create(fk_usuario=request.user)
 
-        # Consolidar ingredientes
-        consolidado = {}
-
+        # Consolidar ingredientes de recetas
         for menu in menus:
             receta = menu.fk_receta
             receta_ingredientes = receta.recetaingrediente_set.select_related('fk_ingrediente').all()
@@ -348,6 +432,24 @@ def generar_lista_compra(request):
                         'ingrediente': ingrediente,
                         'cantidad': cantidad_escalada
                     }
+
+        # Consolidar ingredientes individuales del plan semanal
+        ingredientes_semanales = IngredienteSemanal.objects.filter(
+            fk_usuario=request.user,
+            fecha__range=[start_date, end_date]
+        ).select_related('fk_ingrediente')
+
+        for ing_sem in ingredientes_semanales:
+            ingrediente = ing_sem.fk_ingrediente
+            cantidad_individual = ing_sem.cantidad * request.user.tamano_familia # Escalar por tamaño de familia
+
+            if ingrediente.id in consolidado:
+                consolidado[ingrediente.id]['cantidad'] += cantidad_individual
+            else:
+                consolidado[ingrediente.id] = {
+                    'ingrediente': ingrediente,
+                    'cantidad': cantidad_individual
+                }
 
         # Guardar ítems de la lista
         for ing_id, data in consolidado.items():

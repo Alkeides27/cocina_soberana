@@ -40,6 +40,48 @@ class MenuSemanal(models.Model):
         return f"{self.fk_usuario.username} - {self.fecha} [{self.get_momento_display()}]: {self.fk_receta.nombre}"
 
 
+class IngredienteSemanal(models.Model):
+    """
+    Permite añadir ingredientes individuales (ej. porciones de fruta) al plan semanal
+    de un usuario, para una fecha y momento específicos.
+    """
+    MOMENTOS = [
+        ('DESAYUNO', 'Desayuno'),
+        ('ALMUERZO', 'Almuerzo'),
+        ('CENA', 'Cena'),
+        ('MERIENDA', 'Merienda'),
+    ]
+
+    fk_usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='ingredientes_semanales',
+        verbose_name="Usuario"
+    )
+    fk_ingrediente = models.ForeignKey(
+        Ingrediente,
+        on_delete=models.PROTECT,
+        related_name='ingredientes_semanales',
+        verbose_name="Ingrediente"
+    )
+    fecha = models.DateField(verbose_name="Fecha")
+    momento = models.CharField(max_length=20, choices=MOMENTOS, verbose_name="Momento del día")
+    cantidad = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name="Cantidad"
+    )
+
+    class Meta:
+        verbose_name = "Ingrediente Semanal"
+        verbose_name_plural = "Ingredientes Semanales"
+        unique_together = ('fk_usuario', 'fk_ingrediente', 'fecha', 'momento')
+
+    def __str__(self) -> str:
+        return f"{self.fk_usuario.username} - {self.fk_ingrediente.nombre} ({self.cantidad} {self.fk_ingrediente.unidad_medida}) - {self.fecha} [{self.get_momento_display()}]"
+
+
 class ListaCompra(models.Model):
     """
     Lista de compras consolidada generada a partir de la planificación del usuario.

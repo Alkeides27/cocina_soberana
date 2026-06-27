@@ -14,4 +14,6 @@ urlpatterns = [
     # HTMX endpoints para agregar al menú desde el catálogo
     path('menu/render-add-form/<int:receta_id>/', views.render_add_to_selection_form, name='render_add_to_selection_form'),
     path('menu/add-htmx/', views.agregar_menu_semanal_htmx, name='agregar_menu_semanal_htmx'),
+    path('ingrediente/add-htmx/', views.agregar_ingrediente_semanal_htmx, name='agregar_ingrediente_semanal_htmx'),
+    path('ingrediente/remove-htmx/<int:pk>/', views.remover_ingrediente_semanal_htmx, name='remover_ingrediente_semanal_htmx'),
 ]
