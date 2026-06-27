@@ -50,6 +50,14 @@ class Ingrediente(models.Model):
         ('NA', 'No Aplica'),
     ]
 
+    TEMPORADAS = [
+        ('TODO', 'Todo el año'),
+        ('PRIMAVERA', 'Primavera'),
+        ('VERANO', 'Verano'),
+        ('OTONO', 'Otoño'),
+        ('INVIERNO', 'Invierno'),
+    ]
+
     nombre = models.CharField(max_length=150, unique=True, verbose_name="Nombre")
     categoria_nutricional = models.CharField(
         max_length=3,
@@ -59,6 +67,12 @@ class Ingrediente(models.Model):
     unidad_medida = models.CharField(max_length=20, verbose_name="Unidad de medida")
     origen = models.CharField(max_length=3, choices=ORIGENES, verbose_name="Origen")
     nivel_costo = models.CharField(max_length=2, choices=NIVELES_COSTO, verbose_name="Nivel de costo")
+    temporada = models.CharField(
+        max_length=10,
+        choices=TEMPORADAS,
+        default='TODO',
+        verbose_name="Temporada"
+    )
     precio_actual = models.DecimalField(
         max_digits=10,
         decimal_places=2,

@@ -26,5 +26,10 @@ def filtrar_recetas(queryset: QuerySet, params: Dict[str, Any]) -> QuerySet:
         queryset = queryset.filter(es_sin_gluten=True)
     if params.get('es_sin_lactosa') in ['on', 'true', True]:
         queryset = queryset.filter(es_sin_lactosa=True)
+
+    # Filtro por temporada de ingredientes
+    temporada = params.get('temporada')
+    if temporada and temporada != 'TODAS':
+        queryset = queryset.filter(ingredientes__temporada=temporada)
         
     return queryset.distinct()
