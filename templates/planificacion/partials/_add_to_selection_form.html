@@ -1,0 +1,30 @@
+<div class="space-y-3" id="add-to-selection-form">
+    <input type="hidden" name="recet-id" value="{{ receta.pk }}">
+
+    <div class="space-y-1">
+        <label for="id_fecha" class="block text-xs font-bold text-texto uppercase">Día</label>
+        <select name="fecha" id="id_fecha" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+            {% for day in dates %}
+                <option value="{{ day.fecha_str }}">{{ day.nombre }} ({{ day.fecha|date:"d/m" }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="space-y-1">
+        <label for="id_momento" class="block text-xs font-bold text-texto uppercase">Momento</label>
+        <select name="momento" id="id_momento" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+            {% for momento_code, momento_label in momentos %}
+                <option value="{{ momento_code }}">{{ momento_label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="button"
+            hx-post="{% url 'agregar_menu_semanal_htmx' %}"
+            hx-target="#add-to-selection-container"
+            hx-swap="outerHTML"
+            hx-include="#add-to-selection-form"
+            class="w-full bg-primario text-white font-bold py-2 px-4 rounded-lg hover:bg-primario-dark transition duration-200">
+        Agregar al Menú Semanal
+    </button>
+</div>

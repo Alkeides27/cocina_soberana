@@ -172,6 +172,69 @@ def menu_semanal(request):
 
 
 @login_required
+def render_add_to_selection_form(request, receta_id):
+    """
+    Endpoint HTMX para renderizar el formulario de selección de fecha y momento
+    para agregar una receta al menú semanal.
+    """
+    receta = get_object_or_404(Receta, pk=receta_id)
+    dates = get_current_week_dates()
+    
+    return render(request, 'planificacion/partials/_add_to_selection_form.html', {
+        'receta': receta,
+        'dates': dates,
+        'momentos': MenuSemanal.MOMENTOS,
+    })
+
+
+@login_required
+@require_POST
+def agregar_menu_semanal_htmx(request):
+    """
+    Endpoint HTMX para agregar una receta al menú semanal.
+    Retorna un mensaje de éxito o error para ser intercambiado en el DOM.
+    """
+    receta_id = request.POST.get('recet-id') # Usamos 'recet-id' del hidden input
+    fecha_str = request.POST.get('fecha')
+    momento = request.POST.get('momento')
+
+    if not all([receta_id, fecha_str, momento]):
+        return HttpResponse(
+            '<div class="p-3 bg-red-50 border border-error text-error text-xs font-bold rounded-lg mb-2">Error: Faltan parámetros requeridos.</div>',
+            status=400
+        )
+
+    try:
+        fecha = datetime.date.fromisoformat(fecha_str)
+        receta = get_object_or_404(Receta, pk=receta_id)
+    except (ValueError, Receta.DoesNotExist):
+        return HttpResponse(
+            '<div class="p-3 bg-red-50 border border-error text-error text-xs font-bold rounded-lg mb-2">Error: Receta o fecha inválida.</div>',
+            status=400
+        )
+
+    # Validar duplicación del slot
+    if MenuSemanal.objects.filter(fk_usuario=request.user, fecha=fecha, momento=momento).exists():
+        return HttpResponse(
+            '<div class="p-3 bg-red-50 border border-error text-error text-xs font-bold rounded-lg mb-2">Ya tienes planificada una receta en esta fecha y momento.</div>',
+            status=400
+        )
+
+    MenuSemanal.objects.create(
+        fk_usuario=request.user,
+        fk_receta=receta,
+        fecha=fecha,
+        momento=momento
+    )
+    
+    # Retornar un mensaje de éxito y el formulario vacío para permitir agregar otra receta
+    return HttpResponse(
+        f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{receta.nombre} agregada al menú!</div>'
+        '<p class="text-xs text-gray-500">Selecciona una receta para agregarla a tu menú semanal.</p>'
+    )
+
+
+@login_required
 @require_POST
 def agregar_menu_semanal(request):
     """
