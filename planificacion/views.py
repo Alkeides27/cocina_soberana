@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from catalogo.models import Receta, Ingrediente
 from .models import MenuSemanal, ListaCompra, ItemListaCompra
+from .models import MenuSemanal, ListaCompra, ItemListaCompra, IngredienteSemanal
 from .sync import sincronizar_lista_compras
 
 
@@ -354,6 +355,22 @@ def agregar_ingrediente_semanal_htmx(request):
 
 
 @login_required
+def render_add_ingrediente_form(request):
+    """
+    Endpoint HTMX para renderizar el formulario de selección de fecha, momento,
+    ingrediente y cantidad para agregar un ingrediente individual al menú semanal.
+    """
+    dates = get_current_week_dates()
+    ingredientes_disponibles = Ingrediente.objects.all().order_by('nombre')
+    
+    return render(request, 'planificacion/partials/_add_ingrediente_form.html', {
+        'dates': dates,
+        'ingredientes': ingredientes_disponibles,
+        'momentos': MenuSemanal.MOMENTOS,
+    })
+
+
+@login_required
 @require_POST
 def remover_ingrediente_semanal_htmx(request, pk):
     """
@@ -411,6 +428,9 @@ def generar_lista_compra(request):
 
         # Crear nueva cabecera de lista
         lista = ListaCompra.objects.create(fk_usuario=request.user)
+
+        # Consolidar ingredientes
+        consolidado = {}
 
         # Consolidar ingredientes de recetas
         for menu in menus:
