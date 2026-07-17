@@ -10,10 +10,10 @@
                     {{ slot.menu_entry.fk_receta.codigo }}
                 </span>
             </div>
-            <!-- Remover receta con HTMX: actualiza solo esta celda -->
+            <!-- Remover receta con HTMX: actualiza todo el planificador -->
             <button hx-post="{% url 'remover_menu_semanal_htmx' slot.menu_entry.pk %}"
-                    hx-target="#slot-{{ slot.fecha_str }}-{{ slot.momento_code }}"
-                    hx-swap="outerHTML"
+                    hx-target="#planner-container"
+                    hx-swap="innerHTML"
                     hx-confirm="¿Remover {{ slot.menu_entry.fk_receta.nombre }} de tu menú?"
                     class="text-xs text-error hover:text-error/85 font-bold hover:underline focus:outline-none cursor-pointer shrink-0">
                 ✕
@@ -32,10 +32,10 @@
                     {{ ing_sem.cantidad|floatformat:2 }} {{ ing_sem.fk_ingrediente.unidad_medida }}
                 </span>
             </div>
-            <!-- Remover ingrediente individual con HTMX -->
+            <!-- Remover ingrediente individual con HTMX: actualiza todo el planificador -->
             <button hx-post="{% url 'remover_ingrediente_semanal_htmx' ing_sem.pk %}"
-                    hx-target="#slot-{{ slot.fecha_str }}-{{ slot.momento_code }}"
-                    hx-swap="outerHTML"
+                    hx-target="#planner-container"
+                    hx-swap="innerHTML"
                     hx-confirm="¿Remover {{ ing_sem.fk_ingrediente.nombre }} de tu menú?"
                     class="text-xs text-error hover:text-error/85 font-bold hover:underline focus:outline-none cursor-pointer shrink-0">
                 ✕
@@ -46,8 +46,8 @@
     {% if not slot.menu_entry and not slot.ingredientes_en_slot %}
         <!-- Slot Vacío: Formulario para añadir receta -->
         <form hx-post="{% url 'agregar_menu_semanal_slot' %}"
-              hx-target="#slot-{{ slot.fecha_str }}-{{ slot.momento_code }}"
-              hx-swap="outerHTML"
+              hx-target="#planner-container"
+              hx-swap="innerHTML"
               class="flex items-center space-x-1">
             {% csrf_token %}
             <input type="hidden" name="fecha" value="{{ slot.fecha_str }}">

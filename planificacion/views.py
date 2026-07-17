@@ -38,45 +38,70 @@ def get_current_week_dates():
 
 def calcular_costo_semanal(user, start_date, end_date):
     """
-    Calcula el costo total del menú semanal del usuario.
+    Calcula el costo total del menú semanal del usuario consolidando todos los ingredientes
+    y estimando el costo en base a paquetes comerciales enteros (math.ceil).
     Si alguna receta contiene ingredientes sin cantidad curada (NULL), retorna None (no disponible).
     """
+    import math
+    from collections import defaultdict
+    from .models import MenuSemanal, IngredienteSemanal
+    
     menus = MenuSemanal.objects.filter(
         fk_usuario=user,
         fecha__range=[start_date, end_date]
     ).select_related('fk_receta')
-
-    costo_total = Decimal('0.00')
-    no_disponible = False
-
+    
+    ingredientes_semanales = IngredienteSemanal.objects.filter(
+        fk_usuario=user,
+        fecha__range=[start_date, end_date]
+    ).select_related('fk_ingrediente')
+    
+    # Si no hay planificación alguna, el costo acumulado es 0
+    if not menus.exists() and not ingredientes_semanales.exists():
+        return Decimal('0.00')
+        
+    consolidado = defaultdict(Decimal)
+    ingredientes_obj = {}
+    
+    # Consolidar ingredientes de recetas
     for menu in menus:
         receta = menu.fk_receta
-        ingredientes_receta = receta.recetaingrediente_set.all()
-
-        if not ingredientes_receta.exists():
-            no_disponible = True
-            break
-
-        receta_costo = Decimal('0.00')
-        curacion_pendiente = False
+        receta_ingredientes = receta.recetaingrediente_set.select_related('fk_ingrediente').all()
         
-        for ri in ingredientes_receta:
+        if not receta_ingredientes.exists():
+            return None
+            
+        for ri in receta_ingredientes:
             if ri.cantidad is None:
-                curacion_pendiente = True
-                break
-            receta_costo += ri.costo
-
-        if curacion_pendiente:
-            no_disponible = True
-            break
-
-        # Escalar según porciones base y tamaño familiar
-        factor = Decimal(user.tamano_familia) / Decimal(receta.porciones_base)
-        costo_total += receta_costo * factor
-
-    if no_disponible:
-        return None
+                return None
+            
+            ingrediente = ri.fk_ingrediente
+            factor = Decimal(user.tamano_familia) / Decimal(receta.porciones_base)
+            cantidad_escalada = ri.cantidad * factor
+            
+            consolidado[ingrediente.id] += cantidad_escalada
+            ingredientes_obj[ingrediente.id] = ingrediente
+            
+    # Consolidar ingredientes individuales
+    for ing_sem in ingredientes_semanales:
+        ingrediente = ing_sem.fk_ingrediente
+        cantidad_individual = ing_sem.cantidad * Decimal(user.tamano_familia)
+        consolidado[ingrediente.id] += cantidad_individual
+        ingredientes_obj[ingrediente.id] = ingrediente
+        
+    # Calcular costo basado en paquetes comerciales enteros
+    costo_total = Decimal('0.00')
+    for ing_id, cantidad in consolidado.items():
+        ing = ingredientes_obj[ing_id]
+        presentacion = ing.presentacion_comercial or Decimal('1.00')
+        
+        # Redondear hacia arriba para obtener paquetes comerciales enteros
+        paquetes = math.ceil(float(cantidad) / float(presentacion))
+        costo_paquete = ing.calcular_costo(presentacion)
+        costo_total += Decimal(str(paquetes)) * costo_paquete
+        
     return costo_total.quantize(Decimal('0.01'))
+
 
 
 @login_required
@@ -187,11 +212,23 @@ def menu_semanal(request):
             })
         grid.append(row)
 
+    # Calcular presupuesto acumulado
+    costo_acumulado = calcular_costo_semanal(request.user, start_date, end_date)
+    presupuesto_semanal = request.user.presupuesto_semanal
+    sobrepasado = False
+    presupuesto_restante = Decimal('0.00')
+    if costo_acumulado is not None:
+        presupuesto_restante = presupuesto_semanal - costo_acumulado
+        sobrepasado = costo_acumulado > presupuesto_semanal
+
     return render(request, 'planificacion/menu_semanal.html', {
         'grid': grid,
         'recetas': recetas_disponibles,
         'ingredientes': ingredientes_disponibles,
         'momentos': MenuSemanal.MOMENTOS,
+        'costo_acumulado': costo_acumulado,
+        'presupuesto_restante': presupuesto_restante,
+        'sobrepasado': sobrepasado,
     })
 
 
@@ -210,12 +247,95 @@ def render_add_to_selection_form(request, receta_id):
         'momentos': MenuSemanal.MOMENTOS,
     })
 
+def render_planner_content(request):
+    """
+    Helper para obtener el fragmento de planificación renderizado listo para HTMX.
+    """
+    from django.template.loader import render_to_string
+    dates = get_current_week_dates()
+    start_date = dates[0]['fecha']
+    end_date = dates[-1]['fecha']
+
+    recetas_disponibles = Receta.objects.all().order_by('nombre')
+    ingredientes_disponibles = Ingrediente.objects.all().order_by('nombre')
+
+    menus = MenuSemanal.objects.filter(
+        fk_usuario=request.user,
+        fecha__range=[start_date, end_date]
+    ).select_related('fk_receta')
+
+    menu_slots = {}
+    for m in menus:
+        menu_slots[(m.fecha.isoformat(), m.momento)] = m
+
+    ingredientes_semanales = IngredienteSemanal.objects.filter(
+        fk_usuario=request.user,
+        fecha__range=[start_date, end_date]
+    ).select_related('fk_ingrediente')
+
+    ingrediente_slots = {}
+    for ing_sem in ingredientes_semanales:
+        ingrediente_slots[(ing_sem.fecha.isoformat(), ing_sem.momento, ing_sem.fk_ingrediente.pk)] = ing_sem
+
+    grid = []
+    for day in dates:
+        row = {
+            'nombre': day['nombre'],
+            'fecha': day['fecha'],
+            'fecha_str': day['fecha_str'],
+            'slots': []
+        }
+        for momento_code, momento_label in MenuSemanal.MOMENTOS:
+            menu_entry = menu_slots.get((day['fecha_str'], momento_code))
+            ingredientes_en_slot = [
+                ing_sem for (fecha_str, momento, ing_pk), ing_sem in ingrediente_slots.items()
+                if fecha_str == day['fecha_str'] and momento == momento_code
+            ]
+            row['slots'].append({
+                'momento_code': momento_code,
+                'momento_label': momento_label,
+                'menu_entry': menu_entry,
+                'ingredientes_en_slot': ingredientes_en_slot,
+                'fecha_str': day['fecha_str'],
+            })
+        grid.append(row)
+
+    costo_acumulado = calcular_costo_semanal(request.user, start_date, end_date)
+    presupuesto_semanal = request.user.presupuesto_semanal
+    sobrepasado = False
+    presupuesto_restante = Decimal('0.00')
+    if costo_acumulado is not None:
+        presupuesto_restante = presupuesto_semanal - costo_acumulado
+        sobrepasado = costo_acumulado > presupuesto_semanal
+
+    html_content = render_to_string('planificacion/partials/_planner_content.html', {
+        'grid': grid,
+        'recetas': recetas_disponibles,
+        'ingredientes': ingredientes_disponibles,
+        'momentos': MenuSemanal.MOMENTOS,
+        'costo_acumulado': costo_acumulado,
+        'presupuesto_restante': presupuesto_restante,
+        'sobrepasado': sobrepasado,
+        'user': request.user,
+    }, request=request)
+    
+    return HttpResponse(html_content)
+
+
+@login_required
+def menu_semanal_content(request):
+    """
+    Endpoint HTMX para recargar la grilla y el presupuesto.
+    """
+    return render_planner_content(request)
+
+
 @login_required
 @require_POST
 def agregar_menu_semanal_slot(request):
     """
     Endpoint HTMX para agregar una receta al menú desde la grilla del planificador.
-    Devuelve el partial _slot_celda.html actualizado para reemplazar el <td> sin recargar la página.
+    Devuelve el contenido completo actualizado del planificador para re-renderizado SPA sin fallos de parseo.
     """
     fecha_str = request.POST.get('fecha')
     momento = request.POST.get('momento')
@@ -223,7 +343,7 @@ def agregar_menu_semanal_slot(request):
 
     if not fecha_str or not momento or not receta_id:
         return HttpResponse(
-            '<td class="p-4 align-top text-xs text-error font-bold">Error: faltan parámetros.</td>',
+            '<div class="p-4 align-top text-xs text-error font-bold">Error: faltan parámetros.</div>',
             status=400
         )
 
@@ -232,7 +352,7 @@ def agregar_menu_semanal_slot(request):
         receta = get_object_or_404(Receta, pk=receta_id)
     except ValueError:
         return HttpResponse(
-            '<td class="p-4 align-top text-xs text-error font-bold">Error: fecha inválida.</td>',
+            '<div class="p-4 align-top text-xs text-error font-bold">Error: fecha inválida.</div>',
             status=400
         )
 
@@ -244,29 +364,8 @@ def agregar_menu_semanal_slot(request):
         defaults={'fk_receta': receta}
     )
 
-    # Reconstruir el slot para devolverlo como partial
-    recetas_disponibles = Receta.objects.all().order_by('nombre')
-    menu_entry = MenuSemanal.objects.filter(
-        fk_usuario=request.user, fecha=fecha, momento=momento
-    ).select_related('fk_receta').first()
+    return render_planner_content(request)
 
-    ingredientes_en_slot = list(
-        IngredienteSemanal.objects.filter(
-            fk_usuario=request.user, fecha=fecha, momento=momento
-        ).select_related('fk_ingrediente')
-    )
-
-    slot = {
-        'fecha_str': fecha_str,
-        'momento_code': momento,
-        'menu_entry': menu_entry,
-        'ingredientes_en_slot': ingredientes_en_slot,
-    }
-
-    return render(request, 'planificacion/partials/_slot_celda.html', {
-        'slot': slot,
-        'recetas': recetas_disponibles,
-    })
 
 @login_required
 @require_POST
@@ -416,9 +515,12 @@ def agregar_ingrediente_semanal_htmx(request):
         cantidad=cantidad_decimal
     )
     
-    return HttpResponse(
-        f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{ingrediente.nombre} agregado al menú!</div>'
-    )
+    success_msg = f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{ingrediente.nombre} agregado al menú!</div>'
+    
+    response = HttpResponse(success_msg)
+    response['HX-Trigger'] = 'updatePlanner'
+    return response
+
 
 
 @login_required
@@ -442,30 +544,12 @@ def render_add_ingrediente_form(request):
 def remover_ingrediente_semanal_htmx(request, pk):
     """
     Endpoint HTMX para remover un ingrediente individual del menú semanal.
-    Devuelve el slot actualizado como partial para reemplazo quirúrgico del <td>.
+    Devuelve el planificador completo actualizado.
     """
     ingrediente_sem = get_object_or_404(IngredienteSemanal, pk=pk, fk_usuario=request.user)
-    fecha = ingrediente_sem.fecha
-    momento = ingrediente_sem.momento
     ingrediente_sem.delete()
 
-    recetas_disponibles = Receta.objects.all().order_by('nombre')
-    slot = {
-        'fecha_str': fecha.isoformat(),
-        'momento_code': momento,
-        'menu_entry': MenuSemanal.objects.filter(
-            fk_usuario=request.user, fecha=fecha, momento=momento
-        ).select_related('fk_receta').first(),
-        'ingredientes_en_slot': list(
-            IngredienteSemanal.objects.filter(
-                fk_usuario=request.user, fecha=fecha, momento=momento
-            ).select_related('fk_ingrediente')
-        ),
-    }
-    return render(request, 'planificacion/partials/_slot_celda.html', {
-        'slot': slot,
-        'recetas': recetas_disponibles,
-    })
+    return render_planner_content(request)
 
 
 @login_required
@@ -473,33 +557,19 @@ def remover_ingrediente_semanal_htmx(request, pk):
 def remover_menu_semanal(request, pk):
     """
     Endpoint para remover una receta del menú semanal.
-    Si viene de HTMX, devuelve el slot vacío como partial para actualización quirúrgica del DOM.
+    Si viene de HTMX, devuelve el planificador completo actualizado.
     """
     menu = get_object_or_404(MenuSemanal, pk=pk, fk_usuario=request.user)
-    fecha = menu.fecha
-    momento = menu.momento
     nombre_receta = menu.fk_receta.nombre
     menu.delete()
 
     if request.headers.get('HX-Request') == 'true':
-        recetas_disponibles = Receta.objects.all().order_by('nombre')
-        slot = {
-            'fecha_str': fecha.isoformat(),
-            'momento_code': momento,
-            'menu_entry': None,
-            'ingredientes_en_slot': list(
-                IngredienteSemanal.objects.filter(
-                    fk_usuario=request.user, fecha=fecha, momento=momento
-                ).select_related('fk_ingrediente')
-            ),
-        }
-        return render(request, 'planificacion/partials/_slot_celda.html', {
-            'slot': slot,
-            'recetas': recetas_disponibles,
-        })
+        return render_planner_content(request)
 
     messages.success(request, f"Se eliminó {nombre_receta} de tu menú.")
+
     return redirect('menu_semanal')
+
 
 
 @login_required
@@ -685,3 +755,67 @@ def sync_lista_compra(request):
         'status': 'success',
         'items': items_response
     })
+
+
+@login_required
+@require_POST
+def vaciar_planificacion(request):
+    """
+    Elimina todas las recetas e ingredientes planificados de la semana actual,
+    y también elimina la lista de compras del usuario si existe.
+    Retorna el parcial _planner_content.html vacío con presupuesto a cero.
+    """
+    dates = get_current_week_dates()
+    start_date = dates[0]['fecha']
+    end_date = dates[-1]['fecha']
+    
+    # 1. Eliminar planificación de la semana
+    MenuSemanal.objects.filter(
+        fk_usuario=request.user,
+        fecha__range=[start_date, end_date]
+    ).delete()
+    
+    IngredienteSemanal.objects.filter(
+        fk_usuario=request.user,
+        fecha__range=[start_date, end_date]
+    ).delete()
+    
+    # 2. Eliminar lista de compras vinculada (para evitar estado corrupto)
+    ListaCompra.objects.filter(fk_usuario=request.user).delete()
+    
+    # 3. Preparar variables para re-renderizar la vista limpia
+    recetas_disponibles = Receta.objects.all().order_by('nombre')
+    ingredientes_disponibles = Ingrediente.objects.all().order_by('nombre')
+    
+    # Construir grilla vacía
+    grid = []
+    for day in dates:
+        row = {
+            'nombre': day['nombre'],
+            'fecha': day['fecha'],
+            'fecha_str': day['fecha_str'],
+            'slots': []
+        }
+        for momento_code, momento_label in MenuSemanal.MOMENTOS:
+            row['slots'].append({
+                'momento_code': momento_code,
+                'momento_label': momento_label,
+                'menu_entry': None,
+                'ingredientes_en_slot': [],
+                'fecha_str': day['fecha_str'],
+            })
+        grid.append(row)
+        
+    messages.success(request, "Se ha reiniciado la planificación de esta semana.")
+    
+    # Dado que es HTMX, devolvemos directamente el partial completo
+    return render(request, 'planificacion/partials/_planner_content.html', {
+        'grid': grid,
+        'recetas': recetas_disponibles,
+        'ingredientes': ingredientes_disponibles,
+        'momentos': MenuSemanal.MOMENTOS,
+        'costo_acumulado': Decimal('0.00'),
+        'presupuesto_restante': request.user.presupuesto_semanal,
+        'sobrepasado': False,
+    })
+

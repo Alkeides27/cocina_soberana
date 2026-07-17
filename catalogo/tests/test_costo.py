@@ -73,5 +73,6 @@ def test_calcular_costo_semanal_no_disponible_con_cantidad_null():
     ri.save()
     
     costo = calcular_costo_semanal(user, lunes, lunes)
-    # Costo: 2 * (5 / 1000) = 0.01. Escala: 0.01 * (4 / 4) = 0.01
-    assert costo == Decimal("0.01")
+    # Costo comercial: math.ceil(2 / 1000) = 1 paquete de 1000g = 5.00
+    assert costo == Decimal("5.00")
+

@@ -48,19 +48,20 @@
         </div>
         
         <!-- Botones de Acción de Lista -->
-        <div class="flex justify-center items-center gap-3 pt-4">
-            <form action="{% url 'generar_lista_compra' %}" method="post" class="inline">
+        <div class="flex flex-col sm:flex-row justify-between items-center w-full max-w-md mx-auto gap-4 mt-6">
+            <form action="{% url 'generar_lista_compra' %}" method="post" class="w-full sm:flex-1">
                 {% csrf_token %}
-                <button type="submit" class="px-5 py-3 border border-gray-200 text-gray-500 hover:text-primario hover:border-primario hover:bg-primario/5 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer bg-white">
+                <button type="submit" class="w-full px-5 py-3 border border-gray-200 text-gray-500 hover:text-primario hover:border-primario hover:bg-primario/5 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer bg-white">
                     Regenerar Lista de Compras
                 </button>
             </form>
             <button hx-post="{% url 'vaciar_lista_compra' %}"
                     hx-confirm="¿Estás seguro de que deseas vaciar toda la lista de compras?"
-                    class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
+                    class="w-full sm:flex-1 px-5 py-3 bg-error hover:bg-error/90 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
                 Vaciar Lista de Compras
             </button>
         </div>
+
 
     {% else %}
         <div class="bg-white py-12 px-6 text-center text-gray-400 italic rounded-2xl border border-gray-100 shadow-md">

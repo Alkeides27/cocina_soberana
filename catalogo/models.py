@@ -55,7 +55,6 @@ class Ingrediente(models.Model):
         ('TODO', 'Todo el año'),
         ('PRIMAVERA', 'Primavera'),
         ('VERANO', 'Verano'),
-        ('OTONO', 'Otoño'),
         ('INVIERNO', 'Invierno'),
     ]
 
