@@ -25,62 +25,62 @@ CATEGORIAS_RAW = [
 ]
 
 # Ingredientes definidos en el PRD sección 11.2 (55 registros)
-# Formato CSV: id, nombre, categoria_nutricional, unidad_medida, origen, nivel_costo
-INGREDIENTES_RAW = """I001,Harina de maíz precocida,CER,gramos,NAC,ME
-I002,Arroz,CER,gramos,NAC,ME
-I003,Pasta,CER,gramos,IMP,ME
-I004,Harina de trigo,CER,gramos,IMP,ME
-I005,Avena en hojuelas,CER,gramos,IMP,ME
-I006,Caraotas negras secas,LEG,gramos,NAC,ME
-I007,Lentejas secas,LEG,gramos,IMP,ME
-I008,Frijoles secos,LEG,gramos,NAC,ME
-I009,Arvejas secas,LEG,gramos,IMP,ME
-I010,Garbanzos secos,LEG,gramos,IMP,ME
-I011,Papa,TUB,gramos,NAC,ME
-I012,Yuca,TUB,gramos,NAC,ME
-I013,Auyama,TUB,gramos,NAC,ME
-I014,Plátano maduro,TUB,unidad,NAC,ME
-I015,Plátano verde,TUB,unidad,NAC,ME
-I016,Cebolla,VEG,unidad,NAC,ME
-I017,Tomate,VEG,unidad,NAC,ME
-I018,Ají dulce,VEG,unidad,NAC,ME
-I019,Pimentón,VEG,unidad,NAC,ME
-I020,Zanahoria,VEG,unidad,NAC,ME
-I021,Repollo,VEG,unidad,NAC,ME
-I022,Espinaca,VEG,gramos,NAC,ME
-I023,Berenjena,VEG,unidad,NAC,ME
-I024,Apio rama,VEG,unidad,NAC,ME
-I025,Aguacate,FRU,unidad,NAC,ME
-I026,Limón,FRU,unidad,NAC,ME
-I027,Jojoto maíz tierno,FRU,unidad,NAC,EM
-I028,Pollo en presas,PRA,gramos,NAC,EM
-I029,Pechuga de pollo,PRA,gramos,NAC,EM
-I030,Pollo entero,PRA,gramos,NAC,EM
-I031,Pescado en filetes,PRA,gramos,NAC,EM
-I032,Pescado de río,PRA,gramos,NAC,EM
-I033,Hígado de res,PRA,gramos,NAC,ME
-I034,Sardinas en agua lata,PRA,gramos,IMP,ME
-I035,Huevos,HUE,unidad,NAC,ME
-I036,Queso blanco,LAC,gramos,NAC,EM
-I037,Queso de mano,LAC,gramos,NAC,EM
-I038,Leche líquida,LAC,ml,NAC,EM
-I039,Mantequilla,LAC,gramos,NAC,EM
-I040,Aceite vegetal,GRA,ml,NAC,ME
-I041,Sal,CON,gramos,NAC,ME
-I042,Pimienta,CON,gramos,IMP,ME
-I043,Ajo,CON,diente,NAC,ME
-I044,Comino,CON,gramos,IMP,ME
-I045,Orégano,CON,gramos,IMP,ME
-I046,Canela,CON,gramos,IMP,ME
-I047,Vinagre,CON,ml,NAC,ME
-I048,Salsa de tomate,CON,gramos,NAC,ME
-I049,Cilantro,HIE,manojo,NAC,ME
-I050,Perejil,HIE,manojo,NAC,ME
-I051,Cebollín,HIE,manojo,NAC,ME
-I052,Papelón,EDU,gramos,NAC,ME
-I053,Azúcar,EDU,gramos,NAC,ME
-I054,Agua,LIQ,ml,NAC,NA
-I055,Caldo de pollo,LIQ,ml,NAC,ME"""
+# Formato CSV: id, nombre, categoria_nutricional, unidad_medida, origen, nivel_costo, temporada
+INGREDIENTES_RAW = """I001,Harina de maíz precocida,CER,gramos,NAC,ME,TODO
+I002,Arroz,CER,gramos,NAC,ME,TODO
+I003,Pasta,CER,gramos,IMP,ME,TODO
+I004,Harina de trigo,CER,gramos,IMP,ME,TODO
+I005,Avena en hojuelas,CER,gramos,IMP,ME,TODO
+I006,Caraotas negras secas,LEG,gramos,NAC,ME,TODO
+I007,Lentejas secas,LEG,gramos,IMP,ME,TODO
+I008,Frijoles secos,LEG,gramos,NAC,ME,TODO
+I009,Arvejas secas,LEG,gramos,IMP,ME,TODO
+I010,Garbanzos secos,LEG,gramos,IMP,ME,TODO
+I011,Papa,TUB,gramos,NAC,ME,TODO
+I012,Yuca,TUB,gramos,NAC,ME,TODO
+I013,Auyama,TUB,gramos,NAC,ME,TODO
+I014,Plátano maduro,TUB,unidad,NAC,ME,TODO
+I015,Plátano verde,TUB,unidad,NAC,ME,TODO
+I016,Cebolla,VEG,unidad,NAC,ME,TODO
+I017,Tomate,VEG,unidad,NAC,ME,TODO
+I018,Ají dulce,VEG,unidad,NAC,ME,TODO
+I019,Pimentón,VEG,unidad,NAC,ME,TODO
+I020,Zanahoria,VEG,unidad,NAC,ME,TODO
+I021,Repollo,VEG,unidad,NAC,ME,TODO
+I022,Espinaca,VEG,gramos,NAC,ME,TODO
+I023,Berenjena,VEG,unidad,NAC,ME,TODO
+I024,Apio rama,VEG,unidad,NAC,ME,TODO
+I025,Aguacate,FRU,unidad,NAC,ME,VERANO
+I026,Limón,FRU,unidad,NAC,ME,TODO
+I027,Jojoto maíz tierno,FRU,unidad,NAC,EM,VERANO
+I028,Pollo en presas,PRA,gramos,NAC,EM,TODO
+I029,Pechuga de pollo,PRA,gramos,NAC,EM,TODO
+I030,Pollo entero,PRA,gramos,NAC,EM,TODO
+I031,Pescado en filetes,PRA,gramos,NAC,EM,TODO
+I032,Pescado de río,PRA,gramos,NAC,EM,TODO
+I033,Hígado de res,PRA,gramos,NAC,ME,TODO
+I034,Sardinas en agua lata,PRA,gramos,IMP,ME,TODO
+I035,Huevos,HUE,unidad,NAC,ME,TODO
+I036,Queso blanco,LAC,gramos,NAC,EM,TODO
+I037,Queso de mano,LAC,gramos,NAC,EM,TODO
+I038,Leche líquida,LAC,ml,NAC,EM,TODO
+I039,Mantequilla,LAC,gramos,NAC,EM,TODO
+I040,Aceite vegetal,GRA,ml,NAC,ME,TODO
+I041,Sal,CON,gramos,NAC,ME,TODO
+I042,Pimienta,CON,gramos,IMP,ME,TODO
+I043,Ajo,CON,diente,NAC,ME,TODO
+I044,Comino,CON,gramos,IMP,ME,TODO
+I045,Orégano,CON,gramos,IMP,ME,TODO
+I046,Canela,CON,gramos,IMP,ME,TODO
+I047,Vinagre,CON,ml,NAC,ME,TODO
+I048,Salsa de tomate,CON,gramos,NAC,ME,TODO
+I049,Cilantro,HIE,manojo,NAC,ME,TODO
+I050,Perejil,HIE,manojo,NAC,ME,TODO
+I051,Cebollín,HIE,manojo,NAC,ME,TODO
+I052,Papelón,EDU,gramos,NAC,ME,TODO
+I053,Azúcar,EDU,gramos,NAC,ME,TODO
+I054,Agua,LIQ,ml,NAC,NA,TODO
+I055,Caldo de pollo,LIQ,ml,NAC,ME,TODO"""
 
 # Recetas definidas en el PRD sección 11.3 (35 registros)
 # Formato: codigo | nombre | categorias (separadas por +) | porciones | nivel_costo | kcal | prot | carb | gras | fibra | veg | vgn | sg | sl | ingredientes (separados por +)
@@ -178,7 +178,7 @@ class Command(BaseCommand):
                 for row in csv_reader:
                     if not row:
                         continue
-                    ing_id, nombre, cat_nut, unidad, origen, nivel_costo = row
+                    ing_id, nombre, cat_nut, unidad, origen, nivel_costo, temporada = row
                     
                     ing = Ingrediente.objects.create(
                         nombre=nombre,
@@ -186,6 +186,7 @@ class Command(BaseCommand):
                         unidad_medida=unidad,
                         origen=origen,
                         nivel_costo=nivel_costo,
+                        temporada=temporada,
                         precio_actual=Decimal('0.00'),
                         fecha_precio=None
                     )

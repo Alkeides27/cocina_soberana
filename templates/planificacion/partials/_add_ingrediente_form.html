@@ -1,0 +1,46 @@
+<div class="space-y-3 p-4 bg-white rounded-lg shadow-md" id="add-ingrediente-form">
+    <h4 class="text-md font-bold text-primario mb-3">Agregar Ingrediente Individual</h4>
+    <div id="ingrediente-form-messages"></div>
+
+    <div class="space-y-1">
+        <label for="id_ingrediente" class="block text-xs font-bold text-texto uppercase">Ingrediente</label>
+        <select name="ingrediente_id" id="id_ingrediente" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+            <option value="">Selecciona un ingrediente</option>
+            {% for ing in ingredientes %}
+                <option value="{{ ing.pk }}">{{ ing.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="space-y-1">
+        <label for="id_fecha_ing" class="block text-xs font-bold text-texto uppercase">Día</label>
+        <select name="fecha" id="id_fecha_ing" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+            {% for day in dates %}
+                <option value="{{ day.fecha_str }}">{{ day.nombre }} ({{ day.fecha|date:"d/m" }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="space-y-1">
+        <label for="id_momento_ing" class="block text-xs font-bold text-texto uppercase">Momento</label>
+        <select name="momento" id="id_momento_ing" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+            {% for momento_code, momento_label in momentos %}
+                <option value="{{ momento_code }}">{{ momento_label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="space-y-1">
+        <label for="id_cantidad_ing" class="block text-xs font-bold text-texto uppercase">Cantidad</label>
+        <input type="number" step="0.01" name="cantidad" id="id_cantidad_ing" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none" value="1.00">
+    </div>
+
+    <button type="button"
+            hx-post="{% url 'agregar_ingrediente_semanal_htmx' %}"
+            hx-target="#ingrediente-form-messages"
+            hx-swap="innerHTML"
+            hx-include="#add-ingrediente-form"
+            class="w-full bg-secundario text-white font-bold py-2 px-4 rounded-lg hover:bg-secundario-dark transition duration-200">
+        Agregar Ingrediente
+    </button>
+</div>

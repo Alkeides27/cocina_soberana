@@ -41,6 +41,19 @@
                         <option value="EM" {% if filtros_activos.nivel_costo == 'EM' %}selected{% endif %}>Económico Moderado</option>
                     </select>
                 </div>
+
+                <!-- Temporada -->
+                <div class="space-y-1">
+                    <label for="filtro_temporada" class="block text-xs font-bold text-texto uppercase">Temporada</label>
+                    <select name="temporada" id="filtro_temporada" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs outline-none bg-white">
+                        <option value="TODAS">Todas las temporadas</option>
+                        <option value="TODO" {% if filtros_activos.temporada == 'TODO' %}selected{% endif %}>Todo el año</option>
+                        <option value="PRIMAVERA" {% if filtros_activos.temporada == 'PRIMAVERA' %}selected{% endif %}>Primavera</option>
+                        <option value="VERANO" {% if filtros_activos.temporada == 'VERANO' %}selected{% endif %}>Verano</option>
+                        <option value="OTONO" {% if filtros_activos.temporada == 'OTONO' %}selected{% endif %}>Otoño</option>
+                        <option value="INVIERNO" {% if filtros_activos.temporada == 'INVIERNO' %}selected{% endif %}>Invierno</option>
+                    </select>
+                </div>
                 
                 <!-- Banderas Dietéticas -->
                 <div class="space-y-2 border-t border-gray-100 pt-4">
@@ -67,6 +80,15 @@
                     </label>
                 </div>
             </form>
+
+            <!-- Sección "Agregar a mi selección" -->
+            <div class="mt-6 pt-6 border-t border-gray-100 space-y-4">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Agregar a mi selección</h3>
+                <div id="add-to-selection-container">
+                    <!-- Aquí se cargará el componente HTMX para seleccionar fecha y momento -->
+                    <p class="text-xs text-gray-500">Selecciona una receta para agregarla a tu menú semanal.</p>
+                </div>
+            </div>
         </aside>
         
         <!-- Rejilla de Recetas -->
