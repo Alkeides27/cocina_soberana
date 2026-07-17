@@ -1,6 +1,25 @@
 <!-- Indicadores de Presupuesto -->
 {% include "planificacion/partials/_presupuesto_indicadores.html" %}
 
+<input type="hidden" name="categoria" id="categoria-actual-input" value="{{ categoria_actual }}">
+
+<!-- Filtros de Categoría Globales -->
+<div class="flex flex-wrap gap-2 justify-between items-center bg-white p-4 border border-gray-100 rounded-2xl shadow-md">
+    <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Filtrar Recetas por Categoría</span>
+    <div class="flex flex-wrap gap-1.5">
+        {% for code, label in categorias_list %}
+            <button hx-get="{% url 'filtrar_recetas_categoria' %}?categoria={{ code }}"
+                    hx-target="body"
+                    hx-swap="beforeend"
+                    hx-include="this"
+                    data-categoria-pill="{{ code }}"
+                    class="px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer {% if categoria_actual == code %}bg-primario text-white hover:bg-primario/95{% else %}bg-gray-150 bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                {{ label }}
+            </button>
+        {% endfor %}
+    </div>
+</div>
+
 <!-- Grilla de Planificación -->
 <div class="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden">
     <div class="overflow-x-auto">
@@ -18,13 +37,25 @@
                     <tr class="hover:bg-gray-50/50 transition">
                         <!-- Nombre del Día -->
                         <td class="p-4 border-r border-gray-100 bg-gray-50/30">
-                            <span class="block text-texto font-extrabold">{{ row.nombre }}</span>
-                            <span class="block text-[10px] text-gray-400 font-bold mt-0.5">{{ row.fecha|date:"d M" }}</span>
+                            <div class="flex flex-col justify-between min-h-[70px]">
+                                <div>
+                                    <span class="block text-texto font-extrabold">{{ row.nombre }}</span>
+                                    <span class="block text-[10px] text-gray-400 font-bold mt-0.5">{{ row.fecha|date:"d M" }}</span>
+                                </div>
+                                <button hx-post="{% url 'repetir_dia_semana' %}?fecha={{ row.fecha_str }}&categoria={{ categoria_actual }}"
+                                        hx-target="#planner-container"
+                                        hx-swap="innerHTML"
+                                        hx-include="this"
+                                        hx-confirm="¿Copiar la planificación de este día ({{ row.nombre }}) al resto de la semana? Esto sobrescribirá los otros días."
+                                        class="mt-2 text-[9px] font-extrabold text-primario hover:text-primario/85 hover:underline block text-left cursor-pointer focus:outline-none">
+                                    ⧉ Repetir semana
+                                </button>
+                            </div>
                         </td>
                         
                         <!-- Slots de Comida -->
                         {% for slot in row.slots %}
-                            {% include "planificacion/partials/_slot_celda.html" with slot=slot recetas=recetas fecha_str=row.fecha_str %}
+                            {% include "planificacion/partials/_slot_celda.html" with slot=slot recetas=recetas fecha_str=row.fecha_str categoria_actual=categoria_actual %}
                         {% endfor %}
                     </tr>
                 {% endfor %}

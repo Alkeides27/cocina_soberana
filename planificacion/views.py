@@ -159,8 +159,12 @@ def menu_semanal(request):
     start_date = dates[0]['fecha']
     end_date = dates[-1]['fecha']
 
-    # Obtener recetas para dropdowns
-    recetas_disponibles = Receta.objects.all().order_by('nombre')
+    # Obtener recetas para dropdowns filtradas por categoría
+    categoria_slug = request.GET.get('categoria', 'todos')
+    if categoria_slug == 'todos' or not categoria_slug:
+        recetas_disponibles = Receta.objects.all().order_by('nombre')
+    else:
+        recetas_disponibles = Receta.objects.filter(categorias__slug=categoria_slug).order_by('nombre')
 
     # Obtener ingredientes para dropdowns
     ingredientes_disponibles = Ingrediente.objects.all().order_by('nombre')
@@ -221,6 +225,16 @@ def menu_semanal(request):
         presupuesto_restante = presupuesto_semanal - costo_acumulado
         sobrepasado = costo_acumulado > presupuesto_semanal
 
+    CATEGORIAS_FILTRO = [
+        ('todos', 'Todos'),
+        ('desayuno', 'Desayunos'),
+        ('almuerzo', 'Almuerzos'),
+        ('cena', 'Cenas'),
+        ('merienda', 'Meriendas'),
+        ('sopa', 'Sopas'),
+        ('postre', 'Postres'),
+    ]
+
     return render(request, 'planificacion/menu_semanal.html', {
         'grid': grid,
         'recetas': recetas_disponibles,
@@ -229,6 +243,8 @@ def menu_semanal(request):
         'costo_acumulado': costo_acumulado,
         'presupuesto_restante': presupuesto_restante,
         'sobrepasado': sobrepasado,
+        'categoria_actual': categoria_slug,
+        'categorias_list': CATEGORIAS_FILTRO,
     })
 
 
@@ -247,7 +263,7 @@ def render_add_to_selection_form(request, receta_id):
         'momentos': MenuSemanal.MOMENTOS,
     })
 
-def render_planner_content(request):
+def render_planner_content(request, categoria_slug=None):
     """
     Helper para obtener el fragmento de planificación renderizado listo para HTMX.
     """
@@ -256,7 +272,14 @@ def render_planner_content(request):
     start_date = dates[0]['fecha']
     end_date = dates[-1]['fecha']
 
-    recetas_disponibles = Receta.objects.all().order_by('nombre')
+    if not categoria_slug:
+        categoria_slug = request.GET.get('categoria') or request.POST.get('categoria') or 'todos'
+
+    if categoria_slug == 'todos' or not categoria_slug:
+        recetas_disponibles = Receta.objects.all().order_by('nombre')
+    else:
+        recetas_disponibles = Receta.objects.filter(categorias__slug=categoria_slug).order_by('nombre')
+
     ingredientes_disponibles = Ingrediente.objects.all().order_by('nombre')
 
     menus = MenuSemanal.objects.filter(
@@ -308,6 +331,16 @@ def render_planner_content(request):
         presupuesto_restante = presupuesto_semanal - costo_acumulado
         sobrepasado = costo_acumulado > presupuesto_semanal
 
+    CATEGORIAS_FILTRO = [
+        ('todos', 'Todos'),
+        ('desayuno', 'Desayunos'),
+        ('almuerzo', 'Almuerzos'),
+        ('cena', 'Cenas'),
+        ('merienda', 'Meriendas'),
+        ('sopa', 'Sopas'),
+        ('postre', 'Postres'),
+    ]
+
     html_content = render_to_string('planificacion/partials/_planner_content.html', {
         'grid': grid,
         'recetas': recetas_disponibles,
@@ -317,6 +350,8 @@ def render_planner_content(request):
         'presupuesto_restante': presupuesto_restante,
         'sobrepasado': sobrepasado,
         'user': request.user,
+        'categoria_actual': categoria_slug,
+        'categorias_list': CATEGORIAS_FILTRO,
     }, request=request)
     
     return HttpResponse(html_content)
@@ -328,6 +363,27 @@ def menu_semanal_content(request):
     Endpoint HTMX para recargar la grilla y el presupuesto.
     """
     return render_planner_content(request)
+
+
+@login_required
+def filtrar_recetas_categoria(request):
+    """
+    Endpoint HTMX para filtrar las recetas del planificador por categoría.
+    Retorna un fragmento con los <option> filtrados y un script para inyectarlos
+    en todas las celdas vacías sin necesidad de re-renderizar la grilla completa.
+    """
+    categoria_slug = request.GET.get('categoria', 'todos')
+    
+    if categoria_slug == 'todos' or not categoria_slug:
+        recetas = Receta.objects.all().order_by('nombre')
+    else:
+        recetas = Receta.objects.filter(categorias__slug=categoria_slug).order_by('nombre')
+        
+    return render(request, 'planificacion/partials/_opciones_receta.html', {
+        'recetas': recetas,
+        'categoria_actual': categoria_slug
+    })
+
 
 
 @login_required
@@ -818,4 +874,67 @@ def vaciar_planificacion(request):
         'presupuesto_restante': request.user.presupuesto_semanal,
         'sobrepasado': False,
     })
+
+
+@login_required
+@require_POST
+def repetir_dia_semana(request):
+    """
+    Copia toda la planificación (recetas e ingredientes) de un día específico
+    al resto de los días de la semana actual, sobrescribiendo los existentes.
+    """
+    fecha_source_str = request.GET.get('fecha') or request.POST.get('fecha')
+    if not fecha_source_str:
+        return HttpResponse("Falta la fecha de origen.", status=400)
+        
+    try:
+        fecha_source = datetime.date.fromisoformat(fecha_source_str)
+    except ValueError:
+        return HttpResponse("Fecha de origen inválida.", status=400)
+
+    dates = get_current_week_dates()
+
+    # Obtener la planificación del día origen
+    menus_source = list(MenuSemanal.objects.filter(fk_usuario=request.user, fecha=fecha_source))
+    ingredientes_source = list(IngredienteSemanal.objects.filter(fk_usuario=request.user, fecha=fecha_source))
+
+    # Realizar en una transacción atómica
+    from django.db import transaction
+    with transaction.atomic():
+        # 1. Eliminar lista de compras vinculada para forzar regeneración
+        ListaCompra.objects.filter(fk_usuario=request.user).delete()
+
+        for day in dates:
+            fecha_dest = day['fecha']
+            if fecha_dest == fecha_source:
+                continue
+
+            # 2. Limpiar planificación destino
+            MenuSemanal.objects.filter(fk_usuario=request.user, fecha=fecha_dest).delete()
+            IngredienteSemanal.objects.filter(fk_usuario=request.user, fecha=fecha_dest).delete()
+
+            # 3. Copiar recetas
+            for m in menus_source:
+                MenuSemanal.objects.create(
+                    fk_usuario=request.user,
+                    fk_receta=m.fk_receta,
+                    fecha=fecha_dest,
+                    momento=m.momento
+                )
+
+            # 4. Copiar ingredientes individuales
+            for ing in ingredientes_source:
+                IngredienteSemanal.objects.create(
+                    fk_usuario=request.user,
+                    fk_ingrediente=ing.fk_ingrediente,
+                    fecha=fecha_dest,
+                    momento=ing.momento,
+                    cantidad=ing.cantidad
+                )
+
+    messages.success(request, f"Se repitió la planificación del {fecha_source.strftime('%d/%m')} en toda la semana.")
+
+    # Retorna la vista actualizada del planificador
+    return render_planner_content(request)
+
 

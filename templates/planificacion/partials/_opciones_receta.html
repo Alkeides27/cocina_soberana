@@ -1,0 +1,52 @@
+<div id="new-recipe-options" class="hidden">
+    {% for receta in recetas %}
+        <option value="{{ receta.id }}">{{ receta.nombre }}</option>
+    {% empty %}
+        <option value="" disabled>No hay recetas en esta categoría</option>
+    {% endfor %}
+</div>
+
+<script id="temp-filter-script">
+    (function() {
+        var optionsContainer = document.getElementById('new-recipe-options');
+        if (optionsContainer) {
+            var optionsHtml = optionsContainer.innerHTML;
+            document.querySelectorAll('.selector-receta').forEach(function(select) {
+                // Guardar valor seleccionado actual
+                var currentValue = select.value;
+                select.innerHTML = optionsHtml;
+                // Intentar restaurar valor seleccionado si sigue en la lista
+                if (select.querySelector('option[value="' + currentValue + '"]')) {
+                    select.value = currentValue;
+                }
+            });
+            optionsContainer.remove();
+        }
+        
+        // Actualizar estados visuales de los pills de categoría globales
+        var activeCategory = "{{ categoria_actual }}";
+        document.querySelectorAll('[data-categoria-pill]').forEach(function(btn) {
+            if (btn.getAttribute('data-categoria-pill') === activeCategory) {
+                btn.classList.add('bg-primario', 'text-white');
+                btn.classList.remove('bg-gray-150', 'bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+            } else {
+                btn.classList.remove('bg-primario', 'text-white');
+                btn.classList.add('bg-gray-150', 'bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+            }
+        });
+        
+        // Sincronizar input de estado global
+        var inputGlobal = document.getElementById('categoria-actual-input');
+        if (inputGlobal) {
+            inputGlobal.value = activeCategory;
+        }
+        
+        // Sincronizar inputs de cada formulario de celda
+        document.querySelectorAll('.categoria-form-input').forEach(function(input) {
+            input.value = activeCategory;
+        });
+
+        // Auto-destruir este script temporal
+        document.getElementById('temp-filter-script').remove();
+    })();
+</script>

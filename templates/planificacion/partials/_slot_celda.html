@@ -10,10 +10,11 @@
                     {{ slot.menu_entry.fk_receta.codigo }}
                 </span>
             </div>
-            <!-- Remover receta con HTMX: actualiza todo el planificador -->
-            <button hx-post="{% url 'remover_menu_semanal_htmx' slot.menu_entry.pk %}"
+            <!-- Remover receta con HTMX: actualiza todo el planificador conservando la categoría -->
+            <button hx-post="{% url 'remover_menu_semanal_htmx' slot.menu_entry.pk %}?categoria={{ categoria_actual }}"
                     hx-target="#planner-container"
                     hx-swap="innerHTML"
+                    hx-include="this"
                     hx-confirm="¿Remover {{ slot.menu_entry.fk_receta.nombre }} de tu menú?"
                     class="text-xs text-error hover:text-error/85 font-bold hover:underline focus:outline-none cursor-pointer shrink-0">
                 ✕
@@ -32,10 +33,11 @@
                     {{ ing_sem.cantidad|floatformat:2 }} {{ ing_sem.fk_ingrediente.unidad_medida }}
                 </span>
             </div>
-            <!-- Remover ingrediente individual con HTMX: actualiza todo el planificador -->
-            <button hx-post="{% url 'remover_ingrediente_semanal_htmx' ing_sem.pk %}"
+            <!-- Remover ingrediente individual con HTMX: actualiza todo el planificador conservando la categoría -->
+            <button hx-post="{% url 'remover_ingrediente_semanal_htmx' ing_sem.pk %}?categoria={{ categoria_actual }}"
                     hx-target="#planner-container"
                     hx-swap="innerHTML"
+                    hx-include="this"
                     hx-confirm="¿Remover {{ ing_sem.fk_ingrediente.nombre }} de tu menú?"
                     class="text-xs text-error hover:text-error/85 font-bold hover:underline focus:outline-none cursor-pointer shrink-0">
                 ✕
@@ -48,11 +50,13 @@
         <form hx-post="{% url 'agregar_menu_semanal_slot' %}"
               hx-target="#planner-container"
               hx-swap="innerHTML"
+              hx-include="this"
               class="flex items-center space-x-1">
             {% csrf_token %}
             <input type="hidden" name="fecha" value="{{ slot.fecha_str }}">
             <input type="hidden" name="momento" value="{{ slot.momento_code }}">
-            <select name="receta_id" class="px-2 py-1 border border-gray-300 rounded-lg text-xs w-full outline-none bg-white max-w-[160px]">
+            <input type="hidden" name="categoria" class="categoria-form-input" value="{{ categoria_actual }}">
+            <select name="receta_id" class="selector-receta px-2 py-1 border border-gray-300 rounded-lg text-xs w-full outline-none bg-white max-w-[160px]">
                 {% for receta in recetas %}
                     <option value="{{ receta.id }}">{{ receta.nombre }}</option>
                 {% endfor %}
