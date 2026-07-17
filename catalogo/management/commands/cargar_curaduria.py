@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-from catalogo.models import Receta, Ingrediente, RecetaIngrediente, HistorialPrecioIngrediente
+from catalogo.models import Receta, Ingrediente, RecetaIngrediente, HistorialPrecioIngrediente, Categoria
 
 PRECIOS_REFERENCIA = {
     # ── Cereales (precio por kg) ──────────────────────────────────────────────
@@ -505,6 +505,101 @@ CANTIDADES_RECETAS = [
             {"ingrediente_nombre": "Cilantro", "cantidad": 1},
             {"ingrediente_nombre": "Mantequilla", "cantidad": 30},
         ]
+    },
+    {
+        "codigo_receta": "R036",
+        "nombre": "Arroz con leche",
+        "categorias": ["POSTRE"],
+        "porciones_base": 6,
+        "nivel_costo": "ME",
+        "calorias_por_porcion": 180,
+        "proteinas_g": Decimal('4.00'),
+        "carbohidratos_g": Decimal('32.00'),
+        "grasas_g": Decimal('3.00'),
+        "fibra_g": Decimal('1.00'),
+        "es_vegetariana": True,
+        "es_vegana": False,
+        "es_sin_gluten": False,
+        "es_sin_lactosa": False,
+        "notas_preparacion": "En una olla grande, colocar el agua y el arroz. Cocinar a fuego medio hasta que el arroz esté tierno y el agua se haya consumido casi por completo. Añadir la leche líquida y la canela. Reducir el fuego a bajo y cocinar removiendo constantemente para evitar que se pegue. Cuando empiece a espesar, agregar el azúcar y continuar cocinando por unos 10 minutos más. Retirar de la cocción, dejar enfriar a temperatura ambiente y luego refrigerar. Servir frío espolvoreado con canela.",
+        "ingredientes": [
+            {"ingrediente_nombre": "Arroz", "cantidad": 200},
+            {"ingrediente_nombre": "Leche líquida", "cantidad": 1000},
+            {"ingrediente_nombre": "Azúcar", "cantidad": 150},
+            {"ingrediente_nombre": "Canela", "cantidad": 10},
+            {"ingrediente_nombre": "Agua", "cantidad": 500},
+        ]
+    },
+    {
+        "codigo_receta": "R037",
+        "nombre": "Majarete",
+        "categorias": ["POSTRE"],
+        "porciones_base": 6,
+        "nivel_costo": "ME",
+        "calorias_por_porcion": 220,
+        "proteinas_g": Decimal('3.00'),
+        "carbohidratos_g": Decimal('42.00'),
+        "grasas_g": Decimal('4.00'),
+        "fibra_g": Decimal('2.00'),
+        "es_vegetariana": True,
+        "es_vegana": False,
+        "es_sin_gluten": True,
+        "es_sin_lactosa": True,
+        "notas_preparacion": "En una olla mediana a fuego medio, disolver el papelón rallado en el agua con la canela para hacer un almíbar ligero. En un tazón aparte, mezclar la harina de maíz precocida con la leche líquida fría y una pizca de sal, removiendo bien para evitar grumos. Colar el almíbar de papelón caliente e incorporarlo lentamente a la mezcla de harina y leche. Llevar la olla a fuego medio-bajo, removiendo constantemente con una cuchara de madera. Cocinar hasta que la mezcla espese y hierva durante unos 8 a 10 minutos. Verter caliente en moldes individuales o en un plato llano. Dejar cuajar y enfriar por completo antes de servir.",
+        "ingredientes": [
+            {"ingrediente_nombre": "Harina de maíz precocida", "cantidad": 200},
+            {"ingrediente_nombre": "Leche líquida", "cantidad": 500},
+            {"ingrediente_nombre": "Papelón", "cantidad": 250},
+            {"ingrediente_nombre": "Canela", "cantidad": 10},
+            {"ingrediente_nombre": "Sal", "cantidad": 2},
+            {"ingrediente_nombre": "Agua", "cantidad": 250},
+        ]
+    },
+    {
+        "codigo_receta": "R038",
+        "nombre": "Galletas de avena",
+        "categorias": ["MERIENDA"],
+        "porciones_base": 8,
+        "nivel_costo": "ME",
+        "calorias_por_porcion": 150,
+        "proteinas_g": Decimal('3.00'),
+        "carbohidratos_g": Decimal('22.00'),
+        "grasas_g": Decimal('5.00'),
+        "fibra_g": Decimal('2.00'),
+        "es_vegetariana": True,
+        "es_vegana": False,
+        "es_sin_gluten": False,
+        "es_sin_lactosa": False,
+        "notas_preparacion": "Precalentar el horno a 180°C. En un tazón grande, batir la mantequilla ablandada con el azúcar hasta que quede cremosa. Agregar los huevos uno a uno, mezclando bien. Incorporar la avena en hojuelas y la harina de trigo, revolviendo hasta obtener una masa homogénea. Con una cuchara, tomar porciones de masa y colocarlas espaciadas en una bandeja para hornear engrasada. Hornear durante unos 12 a 15 minutos o hasta que los bordes de las galletas estén dorados. Dejar enfriar en una rejilla antes de consumir.",
+        "ingredientes": [
+            {"ingrediente_nombre": "Avena en hojuelas", "cantidad": 200},
+            {"ingrediente_nombre": "Harina de trigo", "cantidad": 100},
+            {"ingrediente_nombre": "Mantequilla", "cantidad": 100},
+            {"ingrediente_nombre": "Azúcar", "cantidad": 100},
+            {"ingrediente_nombre": "Huevos", "cantidad": 2},
+        ]
+    },
+    {
+        "codigo_receta": "R039",
+        "nombre": "Plátano horneado con queso",
+        "categorias": ["MERIENDA"],
+        "porciones_base": 4,
+        "nivel_costo": "ME",
+        "calorias_por_porcion": 190,
+        "proteinas_g": Decimal('5.00'),
+        "carbohidratos_g": Decimal('30.00'),
+        "grasas_g": Decimal('6.00'),
+        "fibra_g": Decimal('3.00'),
+        "es_vegetariana": True,
+        "es_vegana": False,
+        "es_sin_gluten": True,
+        "es_sin_lactosa": False,
+        "notas_preparacion": "Precalentar el horno a 190°C. Pelar los plátanos maduros. Hacer un corte longitudinal en el centro de cada plátano, sin llegar a cortarlos por completo. Colocarlos en una bandeja para hornear engrasada con un poco de mantequilla. Introducir los plátanos al horno por unos 20 minutos hasta que estén dorados y tiernos. Retirarlos momentáneamente, abrir con cuidado el corte central y rellenar con abundante queso blanco rallado. Volver a meter al horno por 5 a 7 minutos adicionales para que el queso se derrita y dore ligeramente. Servir caliente como merienda dulce y salada.",
+        "ingredientes": [
+            {"ingrediente_nombre": "Plátano maduro", "cantidad": 4},
+            {"ingrediente_nombre": "Queso blanco", "cantidad": 200},
+            {"ingrediente_nombre": "Mantequilla", "cantidad": 30},
+        ]
     }
 ]
 
@@ -530,30 +625,93 @@ class Command(BaseCommand):
         
         try:
             with transaction.atomic():
-                # 1. Actualización de Precios
-                self.stdout.write("Actualizando precios de referencia...")
+                # 1. Actualización de Precios, Presentación Comercial y Temporada
+                self.stdout.write("Actualizando ingredientes (precios, presentación comercial, temporada)...")
+                
+                # Mapeo de presentaciones comerciales específicas (por defecto: 1000 para gramos/ml, 1 para unidades)
+                PRESENTACIONES_COMERCIALES = {
+                    "Huevos": Decimal('15.00'),
+                    "Comino": Decimal('50.00'),
+                    "Pimienta": Decimal('50.00'),
+                    "Orégano": Decimal('50.00'),
+                    "Canela": Decimal('50.00'),
+                }
+                
+                # Mapeo de temporadas específicas
+                TEMPORADAS = {
+                    "Aguacate": "VERANO",
+                    "Jojoto maíz tierno": "VERANO",
+                }
+
                 for nombre_ingrediente, precio in PRECIOS_REFERENCIA.items():
                     try:
                         ingrediente = Ingrediente.objects.get(nombre__iexact=nombre_ingrediente)
+                        
+                        # Determinar presentación comercial
+                        if ingrediente.nombre in PRESENTACIONES_COMERCIALES:
+                            ingrediente.presentacion_comercial = PRESENTACIONES_COMERCIALES[ingrediente.nombre]
+                        elif ingrediente.unidad_medida in ['gramos', 'ml']:
+                            ingrediente.presentacion_comercial = Decimal('1000.00')
+                        else:
+                            ingrediente.presentacion_comercial = Decimal('1.00')
+                        
+                        # Determinar temporada
+                        if ingrediente.nombre in TEMPORADAS:
+                            ingrediente.temporada = TEMPORADAS[ingrediente.nombre]
+                        else:
+                            ingrediente.temporada = 'TODO'
+                        
+                        if not dry_run:
+                            ingrediente.save(update_fields=['presentacion_comercial', 'temporada'])
+
                         # Se crea el registro histórico. El signal en models.py actualizará el precio_actual automáticamente.
                         HistorialPrecioIngrediente.objects.create(
                             fk_ingrediente=ingrediente,
                             precio=precio,
                             fecha=timezone.now().date()
                         )
-                        self.stdout.write(f" - Precio actualizado para: {ingrediente.nombre}")
+                        self.stdout.write(f" - Ingrediente actualizado: {ingrediente.nombre} (Precio: ${precio}, Pres. Comercial: {ingrediente.presentacion_comercial}, Temporada: {ingrediente.temporada})")
                     except Ingrediente.DoesNotExist:
-                        self.stdout.write(self.style.WARNING(f" [!] Ingrediente '{nombre_ingrediente}' no encontrado al actualizar precios."))
+                        self.stdout.write(self.style.WARNING(f" [!] Ingrediente '{nombre_ingrediente}' no encontrado al actualizar."))
 
-                # 2. Procesamiento de Recetas (El bucle ya existente ahora iterará sobre 35 recetas en lugar de 20)
+                # 2. Procesamiento de Recetas
                 self.stdout.write("Procesando recetas curadas...")
                 for datos in CANTIDADES_RECETAS:
                     codigo = datos["codigo_receta"]
                     try:
                         receta = Receta.objects.get(codigo=codigo)
                     except Receta.DoesNotExist:
-                        self.stdout.write(self.style.WARNING(f"Receta {codigo} no encontrada. Saltando."))
-                        continue
+                        # Si no existe y tiene metadatos en datos (ej: R036-R039), la creamos sobre la marcha
+                        if "nombre" in datos:
+                            self.stdout.write(f"Creando receta faltante {codigo} - {datos['nombre']}...")
+                            receta = Receta.objects.create(
+                                codigo=codigo,
+                                nombre=datos["nombre"],
+                                porciones_base=datos["porciones_base"],
+                                calorias_por_porcion=datos["calorias_por_porcion"],
+                                proteinas_g=datos["proteinas_g"],
+                                carbohidratos_g=datos["carbohidratos_g"],
+                                grasas_g=datos["grasas_g"],
+                                fibra_g=datos["fibra_g"],
+                                nivel_costo=datos["nivel_costo"],
+                                es_vegetariana=datos["es_vegetariana"],
+                                es_vegana=datos["es_vegana"],
+                                es_sin_gluten=datos["es_sin_gluten"],
+                                es_sin_lactosa=datos["es_sin_lactosa"],
+                                notas_preparacion=datos["notas_preparacion"]
+                            )
+                            # Vincular categorías
+                            for cat_slug in datos["categorias"]:
+                                try:
+                                    cat = Categoria.objects.get(slug=cat_slug.lower())
+                                    from catalogo.models import RecetaCategoria
+                                    RecetaCategoria.objects.get_or_create(fk_receta=receta, fk_categoria=cat)
+                                except Categoria.DoesNotExist:
+                                    pass
+                        else:
+                            self.stdout.write(self.style.WARNING(f"Receta {codigo} no encontrada. Saltando."))
+                            continue
+
                     
                     if not receta.notas_preparacion and datos["notas_preparacion"]:
                         receta.notas_preparacion = datos["notas_preparacion"]

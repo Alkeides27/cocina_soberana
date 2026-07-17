@@ -183,6 +183,7 @@ def menu_semanal(request):
                 'momento_label': momento_label,
                 'menu_entry': menu_entry,
                 'ingredientes_en_slot': ingredientes_en_slot,
+                'fecha_str': day['fecha_str'],  # necesario para el ID único del <td> en _slot_celda.html
             })
         grid.append(row)
 
@@ -209,15 +210,72 @@ def render_add_to_selection_form(request, receta_id):
         'momentos': MenuSemanal.MOMENTOS,
     })
 
+@login_required
+@require_POST
+def agregar_menu_semanal_slot(request):
+    """
+    Endpoint HTMX para agregar una receta al menú desde la grilla del planificador.
+    Devuelve el partial _slot_celda.html actualizado para reemplazar el <td> sin recargar la página.
+    """
+    fecha_str = request.POST.get('fecha')
+    momento = request.POST.get('momento')
+    receta_id = request.POST.get('receta_id')
+
+    if not fecha_str or not momento or not receta_id:
+        return HttpResponse(
+            '<td class="p-4 align-top text-xs text-error font-bold">Error: faltan parámetros.</td>',
+            status=400
+        )
+
+    try:
+        fecha = datetime.date.fromisoformat(fecha_str)
+        receta = get_object_or_404(Receta, pk=receta_id)
+    except ValueError:
+        return HttpResponse(
+            '<td class="p-4 align-top text-xs text-error font-bold">Error: fecha inválida.</td>',
+            status=400
+        )
+
+    # Crear si no existe (silencioso si ya está ocupado el slot)
+    MenuSemanal.objects.get_or_create(
+        fk_usuario=request.user,
+        fecha=fecha,
+        momento=momento,
+        defaults={'fk_receta': receta}
+    )
+
+    # Reconstruir el slot para devolverlo como partial
+    recetas_disponibles = Receta.objects.all().order_by('nombre')
+    menu_entry = MenuSemanal.objects.filter(
+        fk_usuario=request.user, fecha=fecha, momento=momento
+    ).select_related('fk_receta').first()
+
+    ingredientes_en_slot = list(
+        IngredienteSemanal.objects.filter(
+            fk_usuario=request.user, fecha=fecha, momento=momento
+        ).select_related('fk_ingrediente')
+    )
+
+    slot = {
+        'fecha_str': fecha_str,
+        'momento_code': momento,
+        'menu_entry': menu_entry,
+        'ingredientes_en_slot': ingredientes_en_slot,
+    }
+
+    return render(request, 'planificacion/partials/_slot_celda.html', {
+        'slot': slot,
+        'recetas': recetas_disponibles,
+    })
 
 @login_required
 @require_POST
 def agregar_menu_semanal_htmx(request):
     """
-    Endpoint HTMX para agregar una receta al menú semanal.
-    Retorna un mensaje de éxito o error para ser intercambiado en el DOM.
+    Endpoint HTMX para agregar una receta al menú semanal desde el catálogo (panel lateral).
+    Retorna el formulario reiniciado + mensaje de éxito para mantener el botón activo.
     """
-    receta_id = request.POST.get('recet-id') # Usamos 'recet-id' del hidden input
+    receta_id = request.POST.get('recet-id')  # 'recet-id' viene del hidden input del partial
     fecha_str = request.POST.get('fecha')
     momento = request.POST.get('momento')
 
@@ -249,12 +307,21 @@ def agregar_menu_semanal_htmx(request):
         fecha=fecha,
         momento=momento
     )
-    
-    # Retornar un mensaje de éxito y el formulario vacío para permitir agregar otra receta
-    return HttpResponse(
-        f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{receta.nombre} agregada al menú!</div>'
-        '<p class="text-xs text-gray-500">Selecciona una receta para agregarla a tu menú semanal.</p>'
+
+    # Devolvemos el formulario completo reiniciado + mensaje de éxito temporal
+    dates = get_current_week_dates()
+    success_html = (
+        f'<div class="p-2 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-3">'
+        f'✓ {receta.nombre} agregada al menú'
+        f'</div>'
     )
+    from django.template.loader import render_to_string
+    form_html = render_to_string(
+        'planificacion/partials/_add_to_selection_form.html',
+        {'receta': receta, 'dates': dates, 'momentos': MenuSemanal.MOMENTOS},
+        request=request,
+    )
+    return HttpResponse(success_html + form_html)
 
 
 @login_required
@@ -375,14 +442,30 @@ def render_add_ingrediente_form(request):
 def remover_ingrediente_semanal_htmx(request, pk):
     """
     Endpoint HTMX para remover un ingrediente individual del menú semanal.
+    Devuelve el slot actualizado como partial para reemplazo quirúrgico del <td>.
     """
     ingrediente_sem = get_object_or_404(IngredienteSemanal, pk=pk, fk_usuario=request.user)
-    nombre_ingrediente = ingrediente_sem.fk_ingrediente.nombre
+    fecha = ingrediente_sem.fecha
+    momento = ingrediente_sem.momento
     ingrediente_sem.delete()
 
-    return HttpResponse(
-        f'<div class="p-3 bg-green-50 border border-exito text-exito text-xs font-bold rounded-lg mb-2">¡{nombre_ingrediente} eliminado del menú!</div>'
-    )
+    recetas_disponibles = Receta.objects.all().order_by('nombre')
+    slot = {
+        'fecha_str': fecha.isoformat(),
+        'momento_code': momento,
+        'menu_entry': MenuSemanal.objects.filter(
+            fk_usuario=request.user, fecha=fecha, momento=momento
+        ).select_related('fk_receta').first(),
+        'ingredientes_en_slot': list(
+            IngredienteSemanal.objects.filter(
+                fk_usuario=request.user, fecha=fecha, momento=momento
+            ).select_related('fk_ingrediente')
+        ),
+    }
+    return render(request, 'planificacion/partials/_slot_celda.html', {
+        'slot': slot,
+        'recetas': recetas_disponibles,
+    })
 
 
 @login_required
@@ -390,13 +473,30 @@ def remover_ingrediente_semanal_htmx(request, pk):
 def remover_menu_semanal(request, pk):
     """
     Endpoint para remover una receta del menú semanal.
+    Si viene de HTMX, devuelve el slot vacío como partial para actualización quirúrgica del DOM.
     """
     menu = get_object_or_404(MenuSemanal, pk=pk, fk_usuario=request.user)
+    fecha = menu.fecha
+    momento = menu.momento
     nombre_receta = menu.fk_receta.nombre
     menu.delete()
 
     if request.headers.get('HX-Request') == 'true':
-        return HttpResponse('<script>window.location.reload();</script>')
+        recetas_disponibles = Receta.objects.all().order_by('nombre')
+        slot = {
+            'fecha_str': fecha.isoformat(),
+            'momento_code': momento,
+            'menu_entry': None,
+            'ingredientes_en_slot': list(
+                IngredienteSemanal.objects.filter(
+                    fk_usuario=request.user, fecha=fecha, momento=momento
+                ).select_related('fk_ingrediente')
+            ),
+        }
+        return render(request, 'planificacion/partials/_slot_celda.html', {
+            'slot': slot,
+            'recetas': recetas_disponibles,
+        })
 
     messages.success(request, f"Se eliminó {nombre_receta} de tu menú.")
     return redirect('menu_semanal')
@@ -484,18 +584,26 @@ def generar_lista_compra(request):
     return redirect('lista_compra')
 
 
+
 @login_required
 def lista_compra(request):
     """
     Muestra la lista de compras del usuario agrupada por categoría nutricional.
+    Cada ítem incluye `paquetes_necesarios` calculado a partir de `presentacion_comercial`.
     """
+    import math
     lista = ListaCompra.objects.filter(fk_usuario=request.user).first()
-    
+
     items_por_categoria = {}
-    
+
     if lista:
         items = lista.items.select_related('fk_ingrediente').order_by('fk_ingrediente__nombre')
         for item in items:
+            # Calcular cuántas unidades comerciales hay que comprar
+            presentacion = item.fk_ingrediente.presentacion_comercial or Decimal('1')
+            paquetes = math.ceil(float(item.cantidad_total) / float(presentacion))
+            item.paquetes_necesarios = paquetes
+
             cat_display = item.fk_ingrediente.get_categoria_nutricional_display()
             if cat_display not in items_por_categoria:
                 items_por_categoria[cat_display] = []
@@ -505,6 +613,24 @@ def lista_compra(request):
         'lista': lista,
         'items_por_categoria': items_por_categoria,
     })
+
+
+
+@login_required
+@require_POST
+def vaciar_lista_compra(request):
+    """
+    Elimina todos los ítems de la lista de compras del usuario.
+    Protegido por hx-confirm en el template para evitar borrados accidentales.
+    """
+    ListaCompra.objects.filter(fk_usuario=request.user).delete()
+    messages.success(request, "Lista de compras vaciada correctamente.")
+    if request.headers.get('HX-Request') == 'true':
+        response = HttpResponse()
+        response['HX-Redirect'] = request.path.replace('vaciar/', '')
+        return response
+    return redirect('lista_compra')
+
 
 
 @login_required

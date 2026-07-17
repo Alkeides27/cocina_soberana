@@ -1,0 +1,65 @@
+<td class="p-4 align-top" id="slot-{{ slot.fecha_str }}-{{ slot.momento_code }}">
+    {% if slot.menu_entry %}
+        <!-- Slot Ocupado con Receta -->
+        <div class="flex justify-between items-start gap-1 p-2 bg-primario/5 rounded-lg border border-primario/10 mb-2">
+            <div class="truncate">
+                <a href="{% url 'detalle_receta' slot.menu_entry.fk_receta.codigo %}" class="text-xs font-extrabold text-primario hover:underline block truncate">
+                    {{ slot.menu_entry.fk_receta.nombre }}
+                </a>
+                <span class="text-[9px] font-bold text-gray-400 bg-white px-1 py-0.5 rounded border border-gray-100 uppercase tracking-wider mt-1 inline-block">
+                    {{ slot.menu_entry.fk_receta.codigo }}
+                </span>
+            </div>
+            <!-- Remover receta con HTMX: actualiza solo esta celda -->
+            <button hx-post="{% url 'remover_menu_semanal_htmx' slot.menu_entry.pk %}"
+                    hx-target="#slot-{{ slot.fecha_str }}-{{ slot.momento_code }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="¿Remover {{ slot.menu_entry.fk_receta.nombre }} de tu menú?"
+                    class="text-xs text-error hover:text-error/85 font-bold hover:underline focus:outline-none cursor-pointer shrink-0">
+                ✕
+            </button>
+        </div>
+    {% endif %}
+
+    {% for ing_sem in slot.ingredientes_en_slot %}
+        <!-- Slot Ocupado con Ingrediente Individual -->
+        <div class="flex justify-between items-start gap-1 p-2 bg-secundario/5 rounded-lg border border-secundario/10 mb-2">
+            <div class="truncate">
+                <span class="text-xs font-extrabold text-secundario block truncate">
+                    {{ ing_sem.fk_ingrediente.nombre }}
+                </span>
+                <span class="text-[9px] font-bold text-gray-400 bg-white px-1 py-0.5 rounded border border-gray-100 uppercase tracking-wider mt-1 inline-block">
+                    {{ ing_sem.cantidad|floatformat:2 }} {{ ing_sem.fk_ingrediente.unidad_medida }}
+                </span>
+            </div>
+            <!-- Remover ingrediente individual con HTMX -->
+            <button hx-post="{% url 'remover_ingrediente_semanal_htmx' ing_sem.pk %}"
+                    hx-target="#slot-{{ slot.fecha_str }}-{{ slot.momento_code }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="¿Remover {{ ing_sem.fk_ingrediente.nombre }} de tu menú?"
+                    class="text-xs text-error hover:text-error/85 font-bold hover:underline focus:outline-none cursor-pointer shrink-0">
+                ✕
+            </button>
+        </div>
+    {% endfor %}
+
+    {% if not slot.menu_entry and not slot.ingredientes_en_slot %}
+        <!-- Slot Vacío: Formulario para añadir receta -->
+        <form hx-post="{% url 'agregar_menu_semanal_slot' %}"
+              hx-target="#slot-{{ slot.fecha_str }}-{{ slot.momento_code }}"
+              hx-swap="outerHTML"
+              class="flex items-center space-x-1">
+            {% csrf_token %}
+            <input type="hidden" name="fecha" value="{{ slot.fecha_str }}">
+            <input type="hidden" name="momento" value="{{ slot.momento_code }}">
+            <select name="receta_id" class="px-2 py-1 border border-gray-300 rounded-lg text-xs w-full outline-none bg-white max-w-[160px]">
+                {% for receta in recetas %}
+                    <option value="{{ receta.id }}">{{ receta.nombre }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-2.5 py-1 bg-primario hover:bg-primario/90 text-white rounded-lg text-xs font-bold shadow-md cursor-pointer">
+                +
+            </button>
+        </form>
+    {% endif %}
+</td>

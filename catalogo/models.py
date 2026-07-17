@@ -82,6 +82,18 @@ class Ingrediente(models.Model):
         verbose_name="Precio actual"
     )
     fecha_precio = models.DateField(null=True, blank=True, verbose_name="Fecha del precio")
+    presentacion_comercial = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1000,
+        validators=[MinValueValidator(1)],
+        verbose_name="Presentación comercial",
+        help_text=(
+            "Cantidad base por unidad comercial de compra. "
+            "Ej: 1000 para un paquete de 1kg (gramos), 1000 para 1L (ml), "
+            "1 para ingredientes que se compran por unidad."
+        )
+    )
 
     class Meta:
         verbose_name = "Ingrediente"

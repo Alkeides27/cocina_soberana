@@ -13,10 +13,10 @@ def test_seed_catalogo_idempotente():
     call_command("seed_catalogo", "--no-input")
     assert Categoria.objects.count() == 7
     assert Ingrediente.objects.count() == 55
-    assert Receta.objects.count() == 35
+    assert Receta.objects.count() == 39
     
     # Segunda ejecución (idempotencia)
     call_command("seed_catalogo", "--no-input")
     assert Categoria.objects.count() == 7
     assert Ingrediente.objects.count() == 55
-    assert Receta.objects.count() == 35
+    assert Receta.objects.count() == 39

@@ -1,16 +1,25 @@
 <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow transition" id="item-row-{{ item.id }}">
-    <div class="flex items-center space-x-3">
-        <input type="checkbox" 
+    <div class="flex items-center space-x-3 min-w-0">
+        <input type="checkbox"
                hx-post="{% url 'cambiar_estado_item' item.pk %}"
                hx-target="#item-row-{{ item.id }}"
                hx-swap="outerHTML"
-               class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer"
+               class="rounded border-gray-300 text-primario focus:ring-primario w-4 h-4 cursor-pointer shrink-0"
                {% if item.estado == 'COMPRADO' %}checked{% endif %}>
-        <span class="text-xs font-bold {% if item.estado == 'COMPRADO' %}line-through text-gray-300{% else %}text-texto{% endif %} transition">
-            {{ item.fk_ingrediente.nombre }}
-        </span>
+        <div class="min-w-0">
+            <span class="text-xs font-bold {% if item.estado == 'COMPRADO' %}line-through text-gray-300{% else %}text-texto{% endif %} transition block truncate">
+                {{ item.fk_ingrediente.nombre }}
+            </span>
+            {% if item.cantidad_total > 0 and item.paquetes_necesarios %}
+                <span class="text-[10px] font-semibold text-primario block mt-0.5">
+                    🛒 {{ item.paquetes_necesarios }}
+                    {% if item.paquetes_necesarios == 1 %}unidad{% else %}unidades{% endif %}
+                    comercial{% if item.paquetes_necesarios > 1 %}es{% endif %}
+                </span>
+            {% endif %}
+        </div>
     </div>
-    <span class="text-xs font-bold {% if item.estado == 'COMPRADO' %}text-gray-300{% else %}text-gray-500{% endif %}">
+    <span class="text-xs font-bold {% if item.estado == 'COMPRADO' %}text-gray-300{% else %}text-gray-500{% endif %} text-right ml-2 shrink-0">
         {% if item.cantidad_total > 0 %}
             {{ item.cantidad_total }} {{ item.fk_ingrediente.unidad_medida }}
         {% else %}

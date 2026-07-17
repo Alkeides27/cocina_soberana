@@ -22,9 +22,9 @@
     <button type="button"
             hx-post="{% url 'agregar_menu_semanal_htmx' %}"
             hx-target="#add-to-selection-container"
-            hx-swap="outerHTML"
+            hx-swap="innerHTML"
             hx-include="#add-to-selection-form"
-            class="w-full bg-primario text-white font-bold py-2 px-4 rounded-lg hover:bg-primario-dark transition duration-200">
+            class="w-full bg-primario text-white font-bold py-2 px-4 rounded-lg hover:bg-primario/90 transition duration-200">
         Agregar al Menú Semanal
     </button>
 </div>

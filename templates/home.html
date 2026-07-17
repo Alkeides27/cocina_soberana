@@ -144,8 +144,7 @@
             <!-- Auth buttons -->
             <div class="hidden md:flex items-center gap-3">
                 {% if user.is_authenticated %}
-                <span class="text-sm font-semibold text-cs-on-surface-var">{{ user.nombre|default:user.username
-                    }}</span>
+                <span class="text-sm font-semibold text-cs-on-surface-var">{{ user.nombre|default:user.first_name|default:user.username }}</span>
                 <a href="{% url 'dashboard' %}"
                     class="bg-cs-primary-dim text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition shadow-sm">
                     Mi Planificador
@@ -392,7 +391,7 @@
         <!-- ══════════════════════ TESTIMONIOS ══════════════════════ -->
         <section class="py-24 bg-cs-surface-high/50 px-4 md:px-16" id="testimonios">
             <div class="max-w-6xl mx-auto">
-                <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
                     <div class="max-w-lg">
                         <h2 class="text-3xl md:text-4xl font-extrabold text-cs-on-surface">Voces de nuestra comunidad
                         </h2>
@@ -414,7 +413,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <!-- T1 -->
                     <div
                         class="bg-white p-8 rounded-2xl shadow-sm border border-cs-outline-var/50 border-l-4 border-l-cs-primary-dim hover:shadow-md transition-shadow">

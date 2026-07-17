@@ -15,4 +15,4 @@ def test_seed_catalogo_creates_expected_counts():
     # Validar conteos
     assert Categoria.objects.count() == 7
     assert Ingrediente.objects.count() == 55
-    assert Receta.objects.count() == 35
+    assert Receta.objects.count() == 39
