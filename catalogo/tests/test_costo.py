@@ -39,8 +39,8 @@ def test_detalle_receta_costo_no_disponible_con_cantidad_null(client):
     
     response = client.get(url)
     assert response.status_code == 200
-    # Costo: 100 * 10 = 1000. Escala: 1000 * (4 / 4) = 1000.00
-    assert response.context["costo_estimado"] == Decimal("1000.00")
+    # Costo: 100 * (10 / 1000) = 1.00. Escala: 1 * (4 / 4) = 1.00
+    assert response.context["costo_estimado"] == Decimal("1.00")
 
 @pytest.mark.django_db
 def test_calcular_costo_semanal_no_disponible_con_cantidad_null():
@@ -73,5 +73,5 @@ def test_calcular_costo_semanal_no_disponible_con_cantidad_null():
     ri.save()
     
     costo = calcular_costo_semanal(user, lunes, lunes)
-    # Costo: 2 * 5 = 10. Escala: 10 * (4 / 4) = 10.00
-    assert costo == Decimal("10.00")
+    # Costo: 2 * (5 / 1000) = 0.01. Escala: 0.01 * (4 / 4) = 0.01
+    assert costo == Decimal("0.01")

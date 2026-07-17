@@ -64,7 +64,7 @@ def calcular_costo_semanal(user, start_date, end_date):
             if ri.cantidad is None:
                 curacion_pendiente = True
                 break
-            receta_costo += ri.cantidad * ri.fk_ingrediente.precio_actual
+            receta_costo += ri.costo
 
         if curacion_pendiente:
             no_disponible = True

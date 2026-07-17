@@ -6,49 +6,76 @@ from django.utils import timezone
 from catalogo.models import Receta, Ingrediente, RecetaIngrediente, HistorialPrecioIngrediente
 
 PRECIOS_REFERENCIA = {
-    "Avena en hojuelas": Decimal('1.50'),
-    "Papelón": Decimal('1.35'),
-    "Canela": Decimal('1.00'),
-    "Jojoto maíz tierno": Decimal('0.30'),
-    "Azúcar": Decimal('1.50'),
-    "Sal": Decimal('0.90'),
-    "Mantequilla": Decimal('1.60'),
-    "Queso de mano": Decimal('6.00'),
-    "Arvejas secas": Decimal('1.29'),
-    "Cebolla": Decimal('1.81'),
-    "Ají dulce": Decimal('0.76'),
-    "Ajo": Decimal('1.69'),
-    "Zanahoria": Decimal('1.50'),
-    "Comino": Decimal('0.80'),
-    "Cilantro": Decimal('1.36'),
-    "Garbanzos secos": Decimal('2.33'),
-    "Espinaca": Decimal('3.00'),
-    "Arroz": Decimal('1.29'),
-    "Aceite vegetal": Decimal('3.25'),
-    "Sardinas en agua lata": Decimal('1.59'),
-    "Tomate": Decimal('2.30'),
-    "Papa": Decimal('3.40'),
-    "Huevos": Decimal('2.25'),
-    "Pasta": Decimal('2.17'),
-    "Berenjena": Decimal('1.44'),
-    "Salsa de tomate": Decimal('1.50'),
-    "Queso blanco": Decimal('2.80'),
-    "Leche líquida": Decimal('3.10'),
-    "Harina de trigo": Decimal('1.07'),
-    "Pechuga de pollo": Decimal('6.50'),
-    "Orégano": Decimal('1.50'),
-    "Limón": Decimal('1.54'),
-    "Pimienta": Decimal('3.00'),
-    "Pollo entero": Decimal('3.50'),
-    "Apio rama": Decimal('1.22'),
-    "Cebollín": Decimal('0.98'),
-    "Pescado en filetes": Decimal('5.00'),
-    "Pescado de río": Decimal('4.00'),
-    "Perejil": Decimal('2.00'),
-    "Vinagre": Decimal('1.70'),
-    "Auyama": Decimal('0.97'),
-    "Aguacate": Decimal('4.19'),
+    # ── Cereales (precio por kg) ──────────────────────────────────────────────
+    "Harina de maíz precocida": Decimal('3.00'),   # NUEVO — $3/kg
+    "Arroz": Decimal('2.50'),                       # era $1.29/kg
+    "Pasta": Decimal('3.00'),                       # era $2.17/kg
+    "Harina de trigo": Decimal('2.50'),             # era $1.07/kg
+    "Avena en hojuelas": Decimal('3.50'),           # era $1.50/kg
+    # ── Leguminosas (precio por kg) ───────────────────────────────────────────
+    "Caraotas negras secas": Decimal('5.00'),       # NUEVO — $5/kg
+    "Lentejas secas": Decimal('4.50'),              # NUEVO — $4.50/kg
+    "Frijoles secos": Decimal('4.50'),              # NUEVO — $4.50/kg
+    "Arvejas secas": Decimal('5.00'),               # era $1.29/kg
+    "Garbanzos secos": Decimal('5.50'),             # era $2.33/kg
+    # ── Tubérculos y plátanos (precio por kg, excepto plátano = por unidad) ──
+    "Papa": Decimal('3.50'),                        # era $3.40/kg
+    "Yuca": Decimal('2.50'),                        # NUEVO — $2.50/kg
+    "Auyama": Decimal('2.00'),                      # era $0.97/kg
+    "Plátano maduro": Decimal('0.80'),              # NUEVO — $0.80/unidad (~250g)
+    "Plátano verde": Decimal('0.60'),               # NUEVO — $0.60/unidad
+    # ── Vegetales (precio por kg) ─────────────────────────────────────────────
+    "Cebolla": Decimal('3.50'),                     # era $1.81/kg
+    "Tomate": Decimal('3.50'),                      # era $2.30/kg
+    "Ají dulce": Decimal('5.00'),                   # era $0.76/kg  ← muy subvalorado
+    "Pimentón": Decimal('5.00'),                    # NUEVO — $5/kg
+    "Zanahoria": Decimal('3.00'),                   # era $1.50/kg
+    "Repollo": Decimal('2.50'),                     # NUEVO — $2.50/kg
+    "Espinaca": Decimal('6.00'),                    # era $3.00/kg
+    "Berenjena": Decimal('3.00'),                   # era $1.44/kg
+    "Apio rama": Decimal('3.00'),                   # era $1.22/kg
+    # ── Frutas (precio por kg, jojoto = por unidad) ───────────────────────────
+    "Aguacate": Decimal('8.00'),                    # era $4.19/kg
+    "Limón": Decimal('4.00'),                       # era $1.54/kg
+    "Jojoto maíz tierno": Decimal('0.75'),          # era $0.30/unidad
+    # ── Proteína Animal (precio por kg) ───────────────────────────────────────
+    "Pollo en presas": Decimal('5.50'),             # NUEVO — $5.50/kg
+    "Pechuga de pollo": Decimal('9.00'),            # era $6.50/kg
+    "Pollo entero": Decimal('5.00'),                # era $3.50/kg
+    "Pescado en filetes": Decimal('10.00'),         # era $5.00/kg
+    "Pescado de río": Decimal('7.00'),              # era $4.00/kg
+    "Hígado de res": Decimal('7.00'),               # NUEVO — $7/kg
+    "Sardinas en agua lata": Decimal('8.00'),       # era $1.59 → ahora $/kg correcto
+    # ── Huevos (precio por medio cartón = 15 unidades) ────────────────────────
+    "Huevos": Decimal('4.50'),                      # era $2.25; código divide por 15
+    # ── Lácteos (queso y mantequilla = $/kg; leche = $/litro) ─────────────────
+    "Queso blanco": Decimal('9.00'),                # era $2.80/kg
+    "Queso de mano": Decimal('14.00'),              # era $6.00/kg
+    "Leche líquida": Decimal('2.00'),               # era $3.10/L
+    "Mantequilla": Decimal('6.00'),                 # era $1.60/kg
+    # ── Grasas (precio por litro) ─────────────────────────────────────────────
+    "Aceite vegetal": Decimal('5.00'),              # era $3.25/L
+    # ── Condimentos (precio por kg) ───────────────────────────────────────────
+    "Sal": Decimal('1.50'),                         # era $0.90/kg
+    "Pimienta": Decimal('15.00'),                   # era $3.00/kg
+    "Ajo": Decimal('10.00'),                        # era $1.69/kg  ← muy subvalorado
+    "Comino": Decimal('15.00'),                     # era $0.80/kg
+    "Orégano": Decimal('12.00'),                    # era $1.50/kg
+    "Canela": Decimal('10.00'),                     # era $1.00/kg
+    "Vinagre": Decimal('3.50'),                     # era $1.70/L
+    "Salsa de tomate": Decimal('3.00'),             # era $1.50/kg
+    # ── Hierbas (precio por kg; código multiplica × 0.05 para manojos) ────────
+    "Cilantro": Decimal('5.00'),                    # era $1.36/kg
+    "Perejil": Decimal('5.00'),                     # era $2.00/kg
+    "Cebollín": Decimal('3.00'),                    # era $0.98/kg
+    # ── Edulcorantes (precio por kg) ──────────────────────────────────────────
+    "Papelón": Decimal('3.00'),                     # era $1.35/kg
+    "Azúcar": Decimal('2.00'),                      # era $1.50/kg
+    # ── Líquidos ──────────────────────────────────────────────────────────────
+    "Agua": Decimal('0.00'),                        # agua corriente = gratis
+    "Caldo de pollo": Decimal('2.00'),              # NUEVO — $2/litro
 }
+
 
 
 CANTIDADES_RECETAS = [

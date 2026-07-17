@@ -65,7 +65,7 @@ class DetalleRecetaView(DetailView):
                     # Si al menos un ingrediente tiene cantidad NULL, el costo no está disponible
                     curacion_pendiente = True
                     break
-                costo_total += ri.cantidad * ri.fk_ingrediente.precio_actual
+                costo_total += ri.costo
             
             # Solo estimar costo si hay cantidades curadas y existen ingredientes
             if not curacion_pendiente and ingredientes_receta.exists():

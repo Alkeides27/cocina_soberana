@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models.signals import post_save
@@ -88,6 +89,53 @@ class Ingrediente(models.Model):
 
     def __str__(self) -> str:
         return f"{self.nombre} ({self.unidad_medida})"
+
+    def calcular_costo(self, cantidad):
+        if cantidad is None or self.precio_actual is None:
+            return Decimal('0.00')
+
+        unidad = self.unidad_medida
+        precio = self.precio_actual
+
+        if unidad in ['gramos', 'ml']:
+            # El precio de referencia está expresado por kilogramo o litro (1000 unidades base)
+            return cantidad * (precio / Decimal('1000.00'))
+        elif unidad == 'unidad':
+            # Ingredientes cuyo precio de referencia ya es por unidad (precio directo)
+            precio_por_unidad = {
+                'Jojoto maíz tierno',
+                'Plátano maduro',
+                'Plátano verde',
+            }
+            if self.nombre in precio_por_unidad:
+                return cantidad * precio
+            elif self.nombre == 'Huevos':
+                # El precio de referencia es por 15 huevos (medio cartón); $0.30 c/u aprox.
+                return cantidad * (precio / Decimal('15.00'))
+            else:
+                # Vegetales y frutas medidos en unidades pero cotizados por peso ($/kg)
+                pesos_promedio = {
+                    'Cebolla': Decimal('0.15'),       # 150g
+                    'Tomate': Decimal('0.12'),         # 120g
+                    'Ají dulce': Decimal('0.015'),     # 15g
+                    'Pimentón': Decimal('0.15'),       # 150g
+                    'Zanahoria': Decimal('0.10'),      # 100g
+                    'Berenjena': Decimal('0.25'),      # 250g
+                    'Aguacate': Decimal('0.30'),       # 300g
+                    'Limón': Decimal('0.08'),          # 80g
+                    'Repollo': Decimal('1.00'),        # 1kg (se usa fraccionado en recetas)
+                    'Apio rama': Decimal('0.15'),      # 150g
+                }
+                peso = pesos_promedio.get(self.nombre, Decimal('0.10'))
+                return cantidad * peso * precio
+        elif unidad == 'diente':
+            # Ajo: peso promedio de 1 diente ≈ 5g (0.005 kg)
+            return cantidad * Decimal('0.005') * precio
+        elif unidad == 'manojo':
+            # Hierbas: peso promedio de 1 manojo ≈ 50g (0.05 kg)
+            return cantidad * Decimal('0.05') * precio
+
+        return cantidad * precio
 
 
 class Receta(models.Model):
@@ -207,6 +255,10 @@ class RecetaIngrediente(models.Model):
 
     def __str__(self) -> str:
         return f"{self.fk_receta.codigo} -> {self.fk_ingrediente.nombre}"
+
+    @property
+    def costo(self):
+        return self.fk_ingrediente.calcular_costo(self.cantidad)
 
 
 class HistorialPrecioIngrediente(models.Model):
